@@ -718,7 +718,7 @@ document.getElementById('tbody').addEventListener('click',e=>{
   const td=e.target.closest('td'); if(!td) return;
   if(td.classList.contains('c-exp')||td.classList.contains('c-name')){ closeInlinePopup(); openDrawer(id); }
   else if(td.classList.contains('c-mp')){ const r=db.find(x=>x.id===id); if(!r) return; r.mypage=!r.mypage; const c=td.querySelector('.chk'); if(c){c.classList.toggle('on',r.mypage);c.textContent=r.mypage?'✓':'';} saveDB(); }
-  else if(td.classList.contains('c-status')) showInlinePopup(id,'status',td);
+  else if(td.classList.contains('c-status')){ closeInlinePopup(); openDrawer(id); }
   else if(td.classList.contains('c-result')) showInlinePopup(id,'result',td);
   else if(td.classList.contains('c-dl'))     showInlinePopup(id,'dl',td);
   else if(td.classList.contains('c-wish'))   showInlinePopup(id,'wish',td);
