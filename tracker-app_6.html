@@ -652,6 +652,7 @@ function buildInlineHTML(r, field){
     return `<div class="ip-title">≡ 職種</div><select id="ip-v" class="fi"><option value=""></option>${OCCUPATIONS.filter(Boolean).map(o=>`<option value="${esc(o)}"${o===(isC?'その他（自由入力）':r.occ)?' selected':''}>${esc(o)}</option>`).join('')}</select><input id="ip-custom" type="text" class="fi" style="margin-top:6px;display:${isC?'block':'none'}" value="${esc(isC?r.occ:'')}" placeholder="自由入力...">`;
   }
   if(field==='memo') return `<div class="ip-title">≡ メモ</div><textarea id="ip-v" class="fi" rows="4" placeholder="メモ...">${esc(r.memo||'')}</textarea>`;
+  if(field==='keiro') return `<div class="ip-title">📌 経由</div><div style="display:flex;flex-direction:column;gap:6px">${['','スカウト','メンター','マイページ'].map(k=>`<label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="ip-keiro" value="${esc(k)}"${(r.keiro||'')=== k?' checked':''}> ${k||'なし'}</label>`).join('')}</div><input id="ip-keiro-note" type="text" class="fi" placeholder="スカウト詳細..." value="${esc(r.keiroNote||'')}" style="margin-top:8px;display:${r.keiro==='スカウト'?'block':'none'}">`;
   if(field.startsWith('ph')){
     const pi=parseInt(field.slice(2));
     const names=['1次','2次','3次','4次','5次'];
@@ -679,6 +680,7 @@ function saveInlineField(){
   else if(f==='ind'){ const v=g('ip-v')?.value||''; r.industry=v==='その他（自由入力）'?(g('ip-custom')?.value||''):v; }
   else if(f==='occ'){ const v=g('ip-v')?.value||''; r.occ=v==='その他（自由入力）'?(g('ip-custom')?.value||''):v; }
   else if(f==='memo') r.memo=g('ip-v')?.value||'';
+  else if(f==='keiro'){ r.keiro=document.querySelector('input[name="ip-keiro"]:checked')?.value||''; r.keiroNote=r.keiro==='スカウト'?(g('ip-keiro-note')?.value||''):''; }
   else if(f.startsWith('ph')){
     const pi=parseInt(f.slice(2));
     if(!r.phases[pi]) r.phases[pi]=newPhase();
@@ -706,6 +708,15 @@ function wireInlinePopup(field){
   const ipc=g('ip-custom');
   if(ipc) ipc.addEventListener('input',saveInlineField);
   ['ip-date','ip-time'].forEach(id=>{ const el=g(id); if(el) el.addEventListener('change',saveInlineField); });
+  document.querySelectorAll('input[name="ip-keiro"]').forEach(radio=>{
+    radio.addEventListener('change',()=>{
+      const note=document.getElementById('ip-keiro-note');
+      if(note) note.style.display=radio.value==='スカウト'?'block':'none';
+      saveInlineField();
+    });
+  });
+  const kn=document.getElementById('ip-keiro-note');
+  if(kn) kn.addEventListener('input',saveInlineField);
   document.querySelectorAll('#inline-popup .tpbtn').forEach(btn=>{
     btn.addEventListener('click',()=>{ btn.classList.toggle('sel'); saveInlineField(); });
   });
@@ -741,6 +752,7 @@ document.getElementById('tbody').addEventListener('click',e=>{
   else if(td.classList.contains('c-ph'))     showInlinePopup(id,'ph'+(td.dataset.ph||'0'),td);
   else if(td.classList.contains('c-occ'))    showInlinePopup(id,'occ',td);
   else if(td.classList.contains('c-memo'))   showInlinePopup(id,'memo',td);
+  else if(td.classList.contains('c-keiro'))  showInlinePopup(id,'keiro',td);
 });
 
 document.addEventListener('mousedown',e=>{
