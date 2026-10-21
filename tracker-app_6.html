@@ -263,11 +263,11 @@ td.c-ph.ph-ok{background:#E0F5EC!important;}
         <th class="c-sub" title="提出済み">提出</th>
         <th class="c-exp"></th>
         <th class="c-keiro">経由</th>
+        <th class="c-dl">締め切り</th>
         <th class="c-wish">志望度</th>
         <th class="c-name">企業名</th>
         <th class="c-status">状況</th>
         <th class="c-result">結果</th>
-        <th class="c-dl">締め切り</th>
         <th class="c-ind">業界</th>
         <th class="c-mp">マイページ</th>
         <th class="c-ph">1次</th>
@@ -595,11 +595,11 @@ function renderTable(){
       <td class="c-sub"><span class="sub-chk${r.submitted?' on':''}" data-id="${r.id}" title="提出済み">${r.submitted?'✓':''}</span></td>
       <td class="c-exp"><span class="exp-btn ${ecls}" title="詳細">${eicon}</span></td>
       <td class="c-keiro">${r.keiro?`<span class="keiro-badge kb-${r.keiro==='スカウト'?'scout':r.keiro==='メンター'?'mentor':'mypage'}">${esc(r.keiro)}${r.keiroNote?'<br><small style=\'font-weight:400;font-size:10px\'>'+esc(r.keiroNote)+'</small>':''}</span>`:'—'}</td>
+      <td class="c-dl${dlcls}">${fmtD(r.deadline)}${r.dlTime?' '+r.dlTime:''}</td>
       <td class="c-wish"><span class="stars">${esc(r.wish||'')}</span></td>
       <td class="c-name">${r.seltype?`<span class="st-badge st${esc(r.seltype)}">${esc(r.seltype)}</span>`:''}${esc(r.name||'（未入力）')}</td>
       <td class="c-status">${spill(r.status)}</td>
       <td class="c-result">${rpill(r.result)}</td>
-      <td class="c-dl${dlcls}">${fmtD(r.deadline)}${r.dlTime?' '+r.dlTime:''}</td>
       <td class="c-ind">${r.industry?`<span class="pill" style="background:var(--s2);color:var(--muted)">${esc(r.industry)}</span>`:'—'}</td>
       <td class="c-mp">${chkCell(r.mypage)}</td>
       <td class="c-ph${r.phases[0]?.passed?' ph-ok':''}" data-ph="0">${tags(r.phases[0])}</td>
