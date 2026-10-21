@@ -74,6 +74,11 @@ tr.data-row:hover td.c-sub,tr.data-row:hover td.c-exp,tr.data-row:hover td.c-nam
 
 /* col widths */
 .c-status{min-width:130px;} .c-result{min-width:100px;} .c-dl{min-width:120px;font-variant-numeric:tabular-nums;}
+.c-keiro{min-width:90px;text-align:center;}
+.keiro-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600;}
+.kb-scout{background:#FFF3E0;color:#E07020;}
+.kb-mentor{background:#E8F0FD;color:#2050B0;}
+.kb-mypage{background:#E8F5E9;color:#2E7D32;}
 .c-wish{min-width:75px;} .c-ind{min-width:100px;} .c-mp{min-width:85px;text-align:center;}
 .c-ph{min-width:155px;} .c-occ{min-width:110px;} .c-memo{min-width:220px;max-width:260px;}
 
@@ -244,6 +249,9 @@ td.c-ph.ph-ok{background:#E0F5EC!important;}
       <button class="tab active" data-f="all">すべて</button>
       <button class="tab" data-f="active">選考中</button>
       <button class="tab" data-f="offer">内定</button>
+      <button class="tab" data-f="intern">インターン</button>
+      <button class="tab" data-f="early">早期選考</button>
+      <button class="tab" data-f="honsen">本選考</button>
     </div>
     <button class="new-btn" id="newBtn">+ 新規</button>
     <button class="io-btn" id="syncSettingsBtn" style="margin-left:0;font-size:12px" title="GitHub Gist同期設定">☁ 同期</button>
@@ -254,6 +262,7 @@ td.c-ph.ph-ok{background:#E0F5EC!important;}
       <thead><tr>
         <th class="c-sub" title="提出済み">提出</th>
         <th class="c-exp"></th>
+        <th class="c-keiro">経由</th>
         <th class="c-wish">志望度</th>
         <th class="c-name">企業名</th>
         <th class="c-status">状況</th>
@@ -478,7 +487,7 @@ const DL_ECLS =['','dl-warn','dl-danger','dl-urgent'];
 
 /* ─ Data ─ */
 function newPhase(){ return {tags:[],date:'',time:'',passed:false,memo:''}; }
-function newRow(){ return {id:uid(),name:'',seltype:'',deadline:'',dlTime:'',result:'',wish:'',industry:'',status:'',phases:[newPhase(),newPhase(),newPhase(),newPhase(),newPhase()],esDate:'',sfrom:'',sto:'',offerDL:'',mypage:false,obvisit:false,submitted:false,occ:'',url:'',loginid:'',pw:'',memo:'',compsize:'',compcat:''}; }
+function newRow(){ return {id:uid(),name:'',seltype:'',deadline:'',dlTime:'',result:'',wish:'',industry:'',status:'',phases:[newPhase(),newPhase(),newPhase(),newPhase(),newPhase()],esDate:'',sfrom:'',sto:'',offerDL:'',mypage:false,obvisit:false,submitted:false,occ:'',url:'',loginid:'',pw:'',memo:'',compsize:'',compcat:'',keiro:'',keiroNote:''}; }
 function sampleData(){ return [
   {id:uid(),name:'株式会社テックメガ',deadline:'2026-10-10',dlTime:'23:59',result:'通過中',wish:'★★★',industry:'IT',status:'1次通過',phases:[{tags:['ES','Webテスト'],date:'2026-09-20',time:'',passed:true},{tags:['面接'],date:'2026-10-15',time:'14:00',passed:false},{tags:[],date:'',time:'',passed:false},{tags:[],date:'',time:'',passed:false},{tags:[],date:'',time:'',passed:false}],esDate:'2026-09-20',sfrom:'2026-10-15',sto:'2026-10-15',offerDL:'',mypage:true,obvisit:true,submitted:true,occ:'エンジニア',url:'',pw:'',memo:'技術面接あり。アルゴリズム対策を。'},
   {id:uid(),name:'大和商事株式会社',deadline:'2026-10-05',dlTime:'12:00',result:'落選',wish:'★★',industry:'商社',status:'辞退',phases:[{tags:['ES','GD'],date:'2026-09-15',time:'',passed:true},{tags:['面接'],date:'2026-09-28',time:'10:00',passed:false},{tags:[],date:'',time:'',passed:false},{tags:[],date:'',time:'',passed:false},{tags:[],date:'',time:'',passed:false}],esDate:'2026-09-15',sfrom:'',sto:'',offerDL:'',mypage:true,obvisit:false,submitted:true,occ:'営業',url:'',pw:'',memo:'GDで手応えなし。'},
@@ -496,6 +505,8 @@ function migratePhasesIfNeeded(rows){
     if(r.loginid===undefined) r.loginid='';
     if(r.compsize===undefined) r.compsize='';
     if(r.compcat===undefined) r.compcat='';
+    if(r.keiro===undefined) r.keiro='';
+    if(r.keiroNote===undefined) r.keiroNote='';
     return r;
   });
 }
@@ -537,6 +548,9 @@ function filteredRows(){
   let rows = db;
   if(filter==='active') rows = db.filter(r=>!['内定','落選','辞退','内定辞退'].includes(r.result));
   else if(filter==='offer') rows = db.filter(r=>r.result==='内定');
+  else if(filter==='intern') rows = db.filter(r=>r.seltype==='インターン');
+  else if(filter==='early') rows = db.filter(r=>r.seltype==='早期選考');
+  else if(filter==='honsen') rows = db.filter(r=>r.seltype==='本選考');
   // 締め切り近い順（未設定は末尾）
   return [...rows].sort((a,b)=>{
     if(!a.deadline && !b.deadline) return 0;
@@ -580,6 +594,7 @@ function renderTable(){
     <tr class="data-row" data-id="${r.id}">
       <td class="c-sub"><span class="sub-chk${r.submitted?' on':''}" data-id="${r.id}" title="提出済み">${r.submitted?'✓':''}</span></td>
       <td class="c-exp"><span class="exp-btn ${ecls}" title="詳細">${eicon}</span></td>
+      <td class="c-keiro">${r.keiro?`<span class="keiro-badge kb-${r.keiro==='スカウト'?'scout':r.keiro==='メンター'?'mentor':'mypage'}">${esc(r.keiro)}${r.keiroNote?'<br><small style=\'font-weight:400;font-size:10px\'>'+esc(r.keiroNote)+'</small>':''}</span>`:'—'}</td>
       <td class="c-wish"><span class="stars">${esc(r.wish||'')}</span></td>
       <td class="c-name">${r.seltype?`<span class="st-badge st${esc(r.seltype)}">${esc(r.seltype)}</span>`:''}${esc(r.name||'（未入力）')}</td>
       <td class="c-status">${spill(r.status)}</td>
@@ -840,6 +855,8 @@ function saveDrawer(){
   r.pw      = g('df-pw')?.value||'';
   r.compsize= document.querySelector('.size-btn[data-sv].active')?.dataset.sv||'';
   r.compcat = document.querySelector('.cat-btn[data-cv].active')?.dataset.cv||'';
+  r.keiro   = document.querySelector('[data-keiro].active')?.dataset.keiro||'';
+  r.keiroNote= r.keiro==='スカウト' ? (g('df-keiro-note')?.value||'') : '';
   r.memo    = g('df-memo')?.value||'';
   r.mypage  = !!document.getElementById('df-mypage')?.classList.contains('on');
   r.obvisit = !!document.getElementById('df-obvisit')?.classList.contains('on');
@@ -915,6 +932,15 @@ function buildForm(r){
 
     <div class="prow"><div class="plabel">⚡ 状況</div><div>${sel('df-status',STATUSES,r.status)}</div></div>
     <div class="prow"><div class="plabel">○ 結果</div><div>${sel('df-result',RESULTS,r.result)}</div></div>
+    <div class="prow" style="align-items:start"><div class="plabel">📌 経由</div>
+      <div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+          ${['スカウト','メンター','マイページ'].map(k=>`<button type="button" class="seltype-btn${r.keiro===k?' active':''}" data-keiro="${esc(k)}" onclick="(function(btn){document.querySelectorAll('[data-keiro]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const note=document.getElementById('df-keiro-note');if(note)note.style.display=btn.dataset.keiro==='スカウト'?'block':'none';})(this)">${esc(k)}</button>`).join('')}
+          <button type="button" class="seltype-btn${!r.keiro?' active':''}" data-keiro="" onclick="(function(btn){document.querySelectorAll('[data-keiro]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const note=document.getElementById('df-keiro-note');if(note)note.style.display='none';})(this)">なし</button>
+        </div>
+        <input id="df-keiro-note" type="text" class="fi df" placeholder="スカウト詳細（例：逆求人イベント）" value="${esc(r.keiroNote||'')}" style="display:${r.keiro==='スカウト'?'block':'none'}">
+      </div>
+    </div>
     <div class="prow"><div class="plabel">★ 志望度</div><div>${sel('df-wish',WISHES,r.wish)}</div></div>
     <div class="prow"><div class="plabel">≡ 業界</div><div>${selWithCustom('df-ind',INDUSTRIES,r.industry)}</div></div>
     <div class="prow"><div class="plabel">≡ 職種</div><div>${selWithCustom('df-occ',OCCUPATIONS,r.occ)}</div></div>
