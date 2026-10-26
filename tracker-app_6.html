@@ -551,8 +551,11 @@ function filteredRows(){
   else if(filter==='intern') rows = db.filter(r=>r.seltype==='インターン');
   else if(filter==='early') rows = db.filter(r=>r.seltype==='早期選考');
   else if(filter==='honsen') rows = db.filter(r=>r.seltype==='本選考');
-  // 締め切り近い順（未設定は末尾）
+  // 落選・辞退は末尾、それ以外は締め切り近い順（未設定は末尾）
+  const ENDED = ['落選','内定辞退','辞退'];
   return [...rows].sort((a,b)=>{
+    const ae = ENDED.includes(a.result), be = ENDED.includes(b.result);
+    if(ae !== be) return ae ? 1 : -1;
     if(!a.deadline && !b.deadline) return 0;
     if(!a.deadline) return 1;
     if(!b.deadline) return -1;
