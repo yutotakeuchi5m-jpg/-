@@ -311,10 +311,11 @@ td.c-ph.ph-ok{background:#E0F5EC!important;}
       <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px">Gist ID <span style="font-weight:400">（初回は空欄でOK。自動作成されます）</span></label>
       <input id="syncGistId" type="text" class="fi" placeholder="（初回は自動作成）" style="font-family:monospace;font-size:12px">
     </div>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
       <button onclick="connectGist()" style="flex:1;background:var(--accent);color:#fff;border:none;font-family:inherit;font-size:13px;font-weight:700;padding:10px;border-radius:7px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">接続する</button>
       <button onclick="disconnectGist()" style="background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:13px;padding:10px 14px;border-radius:7px;cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--row-hover)'" onmouseout="this.style.background='none'">切断</button>
     </div>
+    <button onclick="pullFromGist()" style="width:100%;background:none;border:1.5px solid var(--accent);color:var(--accent);font-family:inherit;font-size:13px;font-weight:600;padding:9px;border-radius:7px;cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--row-hover)'" onmouseout="this.style.background='none'">↓ Gistから最新データを取得</button>
   </div>
 </div>
 
@@ -454,6 +455,22 @@ async function connectGist(){
     ghPAT=''; ghGistId='';
     box.style.background='#FDE8E8'; box.style.color='#902020';
     box.textContent='接続失敗: '+e.message;
+  }
+}
+async function pullFromGist(){
+  if(!ghPAT||!ghGistId){ alert('先に接続してください'); return; }
+  const box=document.getElementById('syncStatusBox');
+  box.style.display='block'; box.style.background='var(--row-alt)'; box.style.color='var(--muted)';
+  box.textContent='Gistから取得中...';
+  const fresh=await loadFromGist();
+  if(fresh){
+    db=fresh; try{localStorage.setItem(STORE,JSON.stringify(db));}catch(e){}
+    renderTable();
+    box.style.background='#E0F5EC'; box.style.color='#1A7040';
+    box.textContent='✓ 最新データを取得しました';
+  } else {
+    box.style.background='#FDE8E8'; box.style.color='#902020';
+    box.textContent='取得失敗。PAT・GistIDを確認してください';
   }
 }
 function disconnectGist(){
