@@ -686,7 +686,8 @@ function buildInlineHTML(r, field){
         <input type="date" id="ip-date" class="fi yr4" value="${esc(ph.date||'')}" min="2020-01-01" max="2035-12-31" style="flex:1">
         <input type="time" id="ip-time" class="fi" value="${esc(ph.time||'')}" style="max-width:90px">
       </div>
-      <button type="button" class="ph-pass-btn${ph.passed?' passed':''}" id="ip-pass">${ph.passed?'通過':'通過'}</button>`;
+      <button type="button" class="ph-pass-btn${ph.passed?' passed':''}" id="ip-pass">${ph.passed?'通過':'通過'}</button>
+      <textarea id="ip-memo" class="fi" rows="3" placeholder="メモ..." style="margin-top:8px;width:100%;box-sizing:border-box;resize:vertical">${esc(ph.memo||'')}</textarea>`;
   }
   return '';
 }
@@ -712,6 +713,7 @@ function saveInlineField(){
     r.phases[pi].date=g('ip-date')?.value||'';
     r.phases[pi].time=g('ip-time')?.value||'';
     r.phases[pi].passed=!!g('ip-pass')?.classList.contains('passed');
+    r.phases[pi].memo=g('ip-memo')?.value||'';
   }
   saveDB(); renderTable();
 }
