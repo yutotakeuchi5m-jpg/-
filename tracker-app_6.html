@@ -73,7 +73,7 @@ tr:nth-child(even) td.c-name{background:var(--row-alt);}
 tr.data-row:hover td.c-sub,tr.data-row:hover td.c-exp,tr.data-row:hover td.c-name{background:var(--row-hover)!important;}
 
 /* col widths */
-.c-status{min-width:130px;} .c-result{min-width:100px;} .c-dl{min-width:120px;font-variant-numeric:tabular-nums;}
+.c-status{min-width:130px;} .c-result{min-width:100px;} .c-esdate{min-width:90px;font-variant-numeric:tabular-nums;} .c-dl{min-width:120px;font-variant-numeric:tabular-nums;}
 .c-keiro{min-width:90px;text-align:center;}
 .keiro-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600;}
 .kb-scout{background:#FFF3E0;color:#E07020;}
@@ -267,6 +267,7 @@ td.c-ph.ph-ok{background:#E0F5EC!important;}
         <th class="c-name">企業名</th>
         <th class="c-status">状況</th>
         <th class="c-result">結果</th>
+        <th class="c-esdate">提出日</th>
         <th class="c-dl">締め切り</th>
         <th class="c-ind">業界</th>
         <th class="c-mp">マイページ</th>
@@ -619,6 +620,7 @@ function renderTable(){
       <td class="c-name">${r.seltype?`<span class="st-badge st${esc(r.seltype)}">${esc(r.seltype)}</span>`:''}${esc(r.name||'（未入力）')}</td>
       <td class="c-status">${spill(r.status)}</td>
       <td class="c-result">${rpill(r.result)}</td>
+      <td class="c-esdate">${r.esDate?fmtD(r.esDate):'—'}</td>
       <td class="c-dl${dlcls}">${fmtD(r.deadline)}${r.dlTime?' '+r.dlTime:''}</td>
       <td class="c-ind">${r.industry?`<span class="pill" style="background:var(--s2);color:var(--muted)">${esc(r.industry)}</span>`:'—'}</td>
       <td class="c-mp">${chkCell(r.mypage)}</td>
@@ -662,6 +664,7 @@ function buildInlineHTML(r, field){
   if(field==='status') return `<div class="ip-title">⚡ 状況</div>${sel('ip-v',STATUSES,r.status)}`;
   if(field==='result') return `<div class="ip-title">○ 結果</div>${sel('ip-v',RESULTS,r.result)}`;
   if(field==='wish')   return `<div class="ip-title">★ 志望度</div>${sel('ip-v',WISHES,r.wish)}`;
+  if(field==='esdate') return `<div class="ip-title">📅 ES提出日</div><input id="ip-date" type="date" class="fi yr4" value="${esc(r.esDate||'')}" min="2020-01-01" max="2035-12-31" style="width:100%">`;
   if(field==='dl') return `<div class="ip-title">📅 締め切り</div><div style="display:flex;gap:6px"><input id="ip-date" type="date" class="fi yr4" value="${esc(r.deadline||'')}" min="2020-01-01" max="2035-12-31" style="flex:1"><input id="ip-time" type="time" class="fi" value="${esc(r.dlTime||'')}" style="max-width:90px"></div>`;
   if(field==='ind'){
     const isC=r.industry&&!INDUSTRIES.includes(r.industry);
@@ -696,6 +699,7 @@ function saveInlineField(){
   if(f==='status') r.status=g('ip-v')?.value||'';
   else if(f==='result') r.result=g('ip-v')?.value||'';
   else if(f==='wish')   r.wish=g('ip-v')?.value||'';
+  else if(f==='esdate'){ r.esDate=g('ip-date')?.value||''; }
   else if(f==='dl'){ r.deadline=g('ip-date')?.value||''; r.dlTime=g('ip-time')?.value||''; }
   else if(f==='ind'){ const v=g('ip-v')?.value||''; r.industry=v==='その他（自由入力）'?(g('ip-custom')?.value||''):v; }
   else if(f==='occ'){ const v=g('ip-v')?.value||''; r.occ=v==='その他（自由入力）'?(g('ip-custom')?.value||''):v; }
@@ -766,6 +770,7 @@ document.getElementById('tbody').addEventListener('click',e=>{
   else if(td.classList.contains('c-mp')){ const r=db.find(x=>x.id===id); if(!r) return; r.mypage=!r.mypage; const c=td.querySelector('.chk'); if(c){c.classList.toggle('on',r.mypage);c.textContent=r.mypage?'✓':'';} saveDB(); }
   else if(td.classList.contains('c-status')){ closeInlinePopup(); openDrawer(id); }
   else if(td.classList.contains('c-result')) showInlinePopup(id,'result',td);
+  else if(td.classList.contains('c-esdate')) showInlinePopup(id,'esdate',td);
   else if(td.classList.contains('c-dl'))     showInlinePopup(id,'dl',td);
   else if(td.classList.contains('c-wish'))   showInlinePopup(id,'wish',td);
   else if(td.classList.contains('c-ind'))    showInlinePopup(id,'ind',td);
