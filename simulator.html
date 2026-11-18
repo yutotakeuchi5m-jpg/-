@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>都立高校 合格可能性シミュレーター｜塾講師向け</title>
+<style>
+  *{box-sizing:border-box}
+  :root{
+    --bg:#f5f6fb; --card:#ffffff; --ink:#1e2330; --muted:#6b7280; --line:#e6e8f0;
+    --brand:#4f6df5; --brand2:#7c5cf0; --ok:#1f9d6a; --warn:#c98a00; --bad:#d9534f;
+    --c-s:#0e9f6e; --c-a:#3aa76d; --c-b:#7ab648; --c-c:#d9a300; --c-d:#e8833a; --c-e:#d9534f;
+    --shadow:0 1px 2px rgba(20,24,40,.05),0 8px 24px rgba(20,24,40,.06);
+  }
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic","Noto Sans JP",Meiryo,sans-serif;
+    line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 64px}
+  h1,h2,h3{margin:0;line-height:1.35}
+  h1{font-size:24px;letter-spacing:.01em}
+  h2{font-size:17px}
+  h3{font-size:14px}
+  p{margin:0}
+  .muted{color:var(--muted)}
+  .small{font-size:12.5px}
+  .num{font-variant-numeric:tabular-nums}
+  /* hero */
+  .hero{background:linear-gradient(135deg,#4f6df5 0%,#7c5cf0 55%,#a06bf0 100%);color:#fff;
+    border-radius:18px;padding:24px 26px;box-shadow:var(--shadow);display:flex;gap:26px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  .hero h1{font-size:26px}
+  .hero .kicker{font-size:12px;opacity:.9;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+  .hero .sub{font-size:13.5px;opacity:.95;max-width:660px;margin-top:8px}
+  .badge-box{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:14px;padding:12px 16px;font-size:12.5px;min-width:250px}
+  .badge-box b{font-size:13px}
+  .badge-box div{margin-top:4px;opacity:.96}
+  /* card */
+  section.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-top:18px;box-shadow:var(--shadow)}
+  .card-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px dashed var(--line);padding-bottom:10px}
+  .card-head .tag{background:#eef1ff;color:var(--brand);font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px}
+  .grid{display:grid;gap:18px}
+  @media(min-width:900px){.g2{grid-template-columns:1fr 1fr}.g2a{grid-template-columns:1.15fr 1fr}}
+  /* student bar */
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  label.f{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  input,select,textarea{font:inherit;color:inherit;background:#fff;border:1px solid #d8dbe8;border-radius:10px;padding:7px 10px;width:100%}
+  input[type=checkbox]{width:auto}
+  input:focus,select:focus{outline:2px solid #ccd5ff;border-color:var(--brand)}
+  button{font:inherit;cursor:pointer;border:1px solid #d8dbe8;background:#fff;border-radius:10px;padding:7px 13px;transition:.15s}
+  button:hover{border-color:var(--brand);color:var(--brand)}
+  button.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+  button.primary:hover{background:#3f5ce0;color:#fff}
+  button.ghost-danger:hover{border-color:var(--bad);color:var(--bad)}
+  /* naishin grid */
+  .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+  .sgrid .cell label{font-size:12px;color:var(--muted)}
+  .sub-mark{display:inline-block;font-size:10px;background:#fff2dc;color:#a86a00;border-radius:6px;padding:0 5px;margin-left:3px}
+  .out{background:#f8f9ff;border:1px solid #e4e7fa;border-radius:12px;padding:12px 14px;margin-top:12px}
+  .out-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;padding:3px 0}
+  .out-row b{font-size:16px}
+  .kbig{font-size:26px;font-weight:700;color:var(--brand)}
+  /* verdict */
+  .verdict{display:flex;gap:14px;align-items:center}
+  .vl{width:62px;height:62px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;color:#fff;flex:0 0 auto}
+  .vl.S{background:var(--c-s)}.vl.A{background:var(--c-a)}.vl.B{background:var(--c-b)}.vl.C{background:var(--c-c)}.vl.D{background:var(--c-d)}.vl.E{background:var(--c-e)}.vl.na{background:#c3c8d6;font-size:14px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}
+  .tblwrap th, .tblwrap td{min-width:70px}
+  th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafbff;position:sticky;top:0}
+  .rank-table td:first-child{font-weight:700;width:52px}
+  .rank-badge{display:inline-block;min-width:34px;text-align:center;color:#fff;border-radius:8px;padding:1px 8px;font-weight:700;font-size:12.5px}
+  .rb-S{background:var(--c-s)}.rb-A{background:var(--c-a)}.rb-B{background:var(--c-b)}.rb-C{background:var(--c-c)}.rb-D{background:var(--c-d)}.rb-E{background:var(--c-e)}
+  .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+  .tblwrap table{min-width:940px}
+  .tblwrap input{padding:6px 8px;font-size:13px;border-radius:8px;min-width:62px;width:100%}
+  .chart-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .chart-card h3{margin-bottom:2px}
+  canvas{width:100%;height:250px;display:block}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:6px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+  .pill{display:inline-block;font-size:11.5px;border-radius:999px;padding:2px 10px;background:#eef1ff;color:var(--brand);font-weight:600}
+  .pill.warn{background:#fff2dc;color:#a86a00}
+  .pill.ok{background:#e6f7ef;color:#127a52}
+  .notes{font-size:12.5px;color:#4b5162}
+  .notes li{margin-bottom:5px}
+  a{color:var(--brand)}
+  .split{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:#1e2330;color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:9}
+  .toast.on{opacity:1}
+    /* 上部ナビ・モーダル・学校検索 */
+  .topnav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav-in{max-width:1180px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .tn-title{font-weight:700;font-size:13.5px;letter-spacing:.02em}
+  .tn-btn{margin-left:auto}
+  /* 自動保存インジケーター */
+  .autosave-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:5px;transition:.3s}
+  .autosave-dot.saving{background:#f59e0b;animation:pulse .6s infinite alternate}
+  .autosave-dot.error{background:#ef4444}
+  @keyframes pulse{from{opacity:.5}to{opacity:1}}
+  .save-info{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:4px}
+  .modal{position:fixed;inset:0;background:rgba(20,24,40,.45);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px 20px;z-index:30}
+  .modal[hidden]{display:none}
+  .modal-card{background:#fff;border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:640px;max-height:80vh;display:flex;flex-direction:column;padding:16px 18px}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .roster-list{margin-top:12px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+  .roster-item{border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;display:flex;gap:12px;align-items:center;justify-content:space-between;background:#fdfdff}
+  .roster-item:hover{border-color:var(--brand);background:#f7f9ff}
+  .roster-item.on{border-color:var(--brand);background:#eef1ff}
+  .ri-name{font-weight:700;font-size:14px}
+  .ri-meta{font-size:11.5px;color:var(--muted)}
+  .probbar{height:8px;background:#eef0f7;border-radius:999px;overflow:hidden;margin-top:6px;max-width:340px}
+  .probbar i{display:block;height:100%;background:linear-gradient(90deg,#d9534f,#d9a300,#7ab648,#0e9f6e)}
+  .srcnote{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .flash{animation:flashbg 1.4s ease}
+  @keyframes flashbg{0%{background:#e7ecff}100%{background:#fff}}
+  .cand{font-size:11.5px;background:#fff7e6;border:1px solid #f2dfae;color:#8a6100;border-radius:8px;padding:4px 8px;display:inline-block;margin-top:6px}
+@media print{.hero{color:#000;background:#fff}.no-print{display:none}}
+  /* 学校検索モーダル */
+  .school-modal{position:fixed;inset:0;background:rgba(20,24,40,.5);display:flex;align-items:flex-start;justify-content:center;padding:60px 16px 20px;z-index:40}
+  .school-modal[hidden]{display:none}
+  .school-modal-card{background:#fff;border-radius:18px;box-shadow:0 8px 40px rgba(20,24,40,.18);width:100%;max-width:720px;max-height:82vh;display:flex;flex-direction:column;padding:18px 20px;gap:12px}
+  .school-modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .school-tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .school-tab{border:1px solid var(--line);background:#fafbff;border-radius:8px;padding:4px 12px;font-size:12px;cursor:pointer;transition:.15s}
+  .school-tab.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+  .school-tab:hover:not(.on){border-color:var(--brand);color:var(--brand)}
+  .school-list{overflow-y:auto;display:flex;flex-direction:column;gap:6px;flex:1}
+  .school-item{border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;display:flex;gap:12px;align-items:center;justify-content:space-between;background:#fdfdff;transition:.12s}
+  .school-item:hover{border-color:var(--brand);background:#f0f4ff}
+  .school-item-name{font-weight:700;font-size:13.5px}
+  .school-item-meta{font-size:11.5px;color:var(--muted);margin-top:1px}
+  .school-search-row{display:flex;gap:8px}
+  .school-search-row input{flex:1}
+  .school-search-row select{width:160px;flex:0 0 auto}
+  .school-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;font-size:12.5px;border:1px solid #d8dbe8;border-radius:8px;background:#fff;cursor:pointer;transition:.15s;white-space:nowrap}
+  .school-btn:hover{border-color:var(--brand);color:var(--brand)}
+  .sync-status{font-size:12px;color:var(--muted);white-space:nowrap;}
+  .sync-status.error{color:#d9534f;}
+  .sync-status.saving{color:var(--brand);}
+</style>
+</head>
+<body>
+<div class="topnav no-print">
+  <div class="topnav-in">
+    <span class="tn-title">都立 合格可能性シミュレーター</span>
+    <span class="save-info" id="saveInfo"><span class="autosave-dot" id="saveDot"></span><span id="saveLabel">読み込み中…</span></span>
+    <button class="ghost tn-btn" id="btnSync" style="font-size:12px">☁ 同期</button>
+    <span class="sync-status" id="syncStatus"></span>
+    <button class="primary tn-btn" id="btnRoster">保存した生徒（<span id="rosterCount">0</span>）</button>
+  </div>
+</div>
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <div class="kicker">東京都立高校 一般入試 / 1000点満点</div>
+      <h1>都立高校 合格可能性シミュレーター</h1>
+      <p class="sub">調査書点（300点）＋学力検査点（700点）＝1000点満点で計算し、Vもぎの合格可能性基準（S〜E）で判定します。生徒ごとに保存でき、模試のたびに入力すると推移グラフが自動で更新されます。</p>
+    </div>
+    <div class="badge-box">
+      <b>計算式</b>
+      <div>調査書点 ＝ 換算内申 ÷ 65 × 300</div>
+      <div>学力検査点 ＝ 5科合計（500点） × 1.4 → 700点満点</div>
+      <div>総合得点 ＝ 調査書点 ＋ 学力検査点</div>
+      <div>換算内申 ＝ 主要5教科（そのまま）＋ 副教科4科（2倍）＝ 65点満点</div>
+    </div>
+  </header>
+
+  <!-- 生徒管理 -->
+  <section class="card" id="studentSection">
+    <div class="card-head"><span class="tag">生徒管理</span><h2>生徒データ（自動保存）</h2>
+      <span class="pill" id="saveState">自動保存 ON</span></div>
+    <div class="bar">
+      <div style="flex:1 1 240px">
+        <label class="f">生徒を選択</label>
+        <select id="studentSelect"></select>
+      </div>
+      <div style="flex:0 0 auto;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <button class="primary" id="btnNew">＋ 新規生徒</button>
+        <button id="btnDup">複製</button>
+        <button class="ghost-danger" id="btnDel">削除</button>
+        <button id="btnExport">JSON書き出し</button>
+        <button id="btnImport">JSON読み込み</button>
+        <input type="file" id="importFile" accept="application/json" hidden />
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div><label class="f">生徒名</label><input id="studentName" placeholder="例）山田 太郎（中3）" /></div>
+      <div><label class="f">メモ（指導メモ・面談記録など）</label><input id="studentMemo" placeholder="例）理社が伸びている。英語の長文が課題。" /></div>
+    </div>
+  </section>
+
+  <div class="grid g2a">
+    <!-- 調査書点 -->
+    <section class="card">
+      <div class="card-head"><span class="tag">① 調査書点</span><h2>9教科の成績（5段階）</h2></div>
+      <div class="sgrid" id="naishinGrid"></div>
+      <div class="out">
+        <div class="out-row"><span>換算内申（65点満点）</span><span><b class="num" id="outNaishin65">0</b> / 65</span></div>
+        <div class="out-row"><span>調査書点（300点満点）</span><span><span class="kbig num" id="outShinsho">0</span> <span class="muted">/ 300</span></span></div>
+        <p class="small muted" style="margin-top:6px">副教科（音楽・美術・保健体育・技術家庭）は <b>2倍</b>、主要5教科はそのまま加算します。</p>
+      </div>
+    </section>
+
+    <!-- 学力検査点 -->
+    <section class="card">
+      <div class="card-head"><span class="tag">② 学力検査点</span><h2>当日点の予想（5科）</h2></div>
+      <div class="split" style="margin-bottom:10px">
+        <label class="small"><input type="checkbox" id="autoFill" /> 模試の最新結果を自動で反映する</label>
+        <button id="btnUseMock" class="small">最新の模試合計をコピー</button>
+      </div>
+      <div class="sgrid" id="toujitsuGrid"></div>
+      <div class="out">
+        <div class="out-row"><span>5科合計</span><span><b class="num" id="outTotal5">0</b> / 500</span></div>
+        <div class="out-row"><span>学力検査点（700点満点）</span><span><span class="kbig num" id="outToujitsu">0</span> <span class="muted">/ 700</span></span></div>
+        <div class="out-row small muted" style="border-top:1px dashed var(--line);margin-top:6px;padding-top:8px">
+          <label><input type="checkbox" id="incline" /> 傾斜配点（理数科など：数学・理科を1.5倍 → 600点満点で換算）</label>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 総合得点 -->
+  <section class="card">
+    <div class="card-head"><span class="tag">③ 総合得点</span><h2>本番予想の合計（1000点満点）</h2></div>
+    <div class="grid g2a">
+      <div class="out" style="margin:0">
+        <div class="out-row"><span>調査書点</span><span class="num" id="sumShinsho">0</span></div>
+        <div class="out-row"><span>学力検査点（700換算）</span><span class="num" id="sumToujitsu">0</span></div>
+        <div class="out-row" id="rowEsatj" style="display:none"><span>ESAT-J（スピーキング）</span><span class="num" id="sumEsatj">0</span></div>
+        <div class="out-row" style="border-top:2px solid var(--line);margin-top:6px;padding-top:8px">
+          <span><b>総合得点</b></span><span><span class="kbig num" id="sumTotal">0</span> <span class="muted" id="sumMax">/ 1000</span></span></div>
+      </div>
+      <div>
+        <div class="split" style="margin-bottom:8px">
+          <label class="small"><input type="checkbox" id="esatjToggle" /> ESAT-J を加点して計算する（20点満点）</label>
+        </div>
+        <div id="esatjBox" style="display:none">
+          <label class="f">ESAT-J の点数化された得点（0〜20点）</label>
+          <input type="number" id="esatjInput" min="0" max="20" step="1" value="0" />
+          <p class="small muted" style="margin-top:6px">A〜Fの6段階評価を <b>20点満点</b> に点数化して加算します（総合1020点満点）。ご指定により、既定では計算に含めていません。</p>
+        </div>
+        <p class="small muted" id="esatjOffNote">既定ではESAT-Jを計算に含めていません（チェックを入れると加点されます）。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 志望校 -->
+  <section class="card">
+    <div class="card-head"><span class="tag">④ 志望校判定</span><h2>志望校 3校の合格可能性</h2>
+      <span class="pill">判定基準：Vもぎ 合格可能性</span></div>
+    <p class="small muted" style="margin-bottom:12px">
+      学校名を入力すると、内蔵の学校データ（偏差値・合格基準点・換算内申のめやす）から自動で候補が出て、偏差値と合格基準点が入力されます。数値は手入力でいつでも上書きできます。
+      基準点との差がプラスなら合格圏、マイナスなら要強化という見方で使います。
+    </p>
+    <div class="grid g3" id="schoolsWrap" style="grid-template-columns:1fr"></div>
+
+    <div class="grid g2" style="margin-top:16px">
+      <div>
+        <h3 style="margin-bottom:6px">Vもぎの判定基準（合格可能性）</h3>
+        <div class="tblwrap" style="border:1px solid var(--line)">
+          <table class="rank-table">
+            <thead><tr><th>判定</th><th>合格可能性</th><th>塾での見方（目安）</th></tr></thead>
+            <tbody>
+              <tr><td><span class="rank-badge rb-S">S</span></td><td>90%以上</td><td>安全圏。維持と他教科の底上げを</td></tr>
+              <tr><td><span class="rank-badge rb-A">A</span></td><td>80%以上</td><td>合格圏。この状態を1月まで維持</td></tr>
+              <tr><td><span class="rank-badge rb-B">B</span></td><td>60%以上</td><td>合格圏内。あと1〜2問でA圏</td></tr>
+              <tr><td><span class="rank-badge rb-C">C</span></td><td>40%以上</td><td>努力圏。弱点教科の集中補強</td></tr>
+              <tr><td><span class="rank-badge rb-D">D</span></td><td>20%以上</td><td>要強化。志望校再検討も並行</td></tr>
+              <tr><td><span class="rank-badge rb-E">E</span></td><td>20%未満</td><td>志望校変更を含めた面談を</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3 style="margin-bottom:6px">判定の計算ロジック（画面上で調整できます）</h3>
+        <p class="small notes">
+          総合得点と「合格基準点（60%ライン）」の差、または模試の偏差値と「判定偏差値（60%ライン）」の差を、
+          <b>判定幅</b>（1段階あたりの目安幅）で区切って判定します。<br />
+          ・差 ≧ 判定幅×2 → <span class="rank-badge rb-S">S</span>　・≧ 判定幅×1 → <span class="rank-badge rb-A">A</span>　・≧ 0 → <span class="rank-badge rb-B">B</span><br />
+          ・≧ −判定幅×1 → <span class="rank-badge rb-C">C</span>　・≧ −判定幅×2 → <span class="rank-badge rb-D">D</span>　・それ未満 → <span class="rank-badge rb-E">E</span>
+        </p>
+        <p class="small notes" style="margin-top:8px">合格可能性の目安は、<b>基準点ちょうど＝60%</b>を基準に、判定幅1つぶんで±20ポイントとして換算しています（基準点＋判定幅＝80%、基準点−判定幅＝40%）。Vもぎの実際の判定は偏差値と換算内申の組み合わせで出るため、これは<b>点数差からの簡易推定</b>です。</p>
+        <p class="small muted" style="margin-top:8px">判定幅の初期値は「偏差値 2.2」です（Vもぎの80%ラインと60%ラインの差の全体平均が約2.2という分析に基づく目安）。点数側の初期値は30点の仮置きなので、実際の模試結果に合わせて各校で書き換えてください。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 模試 -->
+  <section class="card">
+    <div class="card-head"><span class="tag">⑤ 模試の記録</span><h2>模試ごとの点数・偏差値</h2>
+      <div style="margin-left:auto"><button class="primary" id="btnAddMock">＋ 模試を追加</button></div></div>
+    <div class="tblwrap">
+      <table id="mockTable">
+        <thead>
+          <tr>
+            <th style="min-width:118px">実施日</th>
+            <th style="min-width:130px">模試名</th>
+            <th>国語 点</th><th>国語 偏差値</th>
+            <th>数学 点</th><th>数学 偏差値</th>
+            <th>英語 点</th><th>英語 偏差値</th>
+            <th>社会 点</th><th>社会 偏差値</th>
+            <th>理科 点</th><th>理科 偏差値</th>
+            <th style="min-width:78px">3科偏差値</th>
+            <th style="min-width:78px">5科偏差値</th>
+            <th style="min-width:74px">5科合計</th>
+            <th style="min-width:96px">換算総合得点</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="mockBody"></tbody>
+      </table>
+    </div>
+    <p class="small muted" style="margin-top:8px">「換算総合得点（本番予想）」＝ 現在の調査書点 ＋ 模試5科合計 × <b>Vもぎ補正係数</b> × 1.4。補正係数は実施月で自動切替：<b>5〜11月 → ×1.2 ／ 12〜3月 → ×1.1</b>（VもぎはW模擬より難易度が高いため、本番得点を上方補正）。内申を変更すると全模試の換算値も更新されます。</p>
+  </section>
+
+  <!-- グラフ -->
+  <section class="card">
+    <div class="card-head"><span class="tag">⑥ 推移グラフ</span><h2>模試を追加するたびに自動更新</h2></div>
+    <div class="grid g2">
+      <div class="chart-card"><h3>各教科の得点の推移</h3><p class="small muted">5教科 ／ 各100点満点</p><canvas id="chartScores"></canvas><div class="legend" id="legendScores"></div></div>
+      <div class="chart-card"><h3>各教科の偏差値の推移</h3><p class="small muted">5教科 ／ 偏差値</p><canvas id="chartDevs"></canvas><div class="legend" id="legendDevs"></div></div>
+      <div class="chart-card"><h3>換算総合得点の推移と志望校ライン</h3><p class="small muted">1000点満点 ／ 破線＝各志望校の合格基準点</p><canvas id="chartTotal"></canvas><div class="legend" id="legendTotal"></div></div>
+      <div class="chart-card"><h3>3科・5科偏差値の推移</h3><p class="small muted">模試の総合偏差値</p><canvas id="chartDev57"></canvas><div class="legend" id="legendDev57"></div></div>
+    </div>
+  </section>
+
+  <!-- 出典・注意 -->
+  <section class="card">
+    <div class="card-head"><span class="tag">補足</span><h2>計算の根拠と注意点</h2></div>
+    <div class="grid g2">
+      <ul class="notes">
+        <li>都立一般入試は <b>学力検査700点＋調査書300点＝1000点満点</b>。調査書点は「換算内申 ÷ 65 × 300」で算出します（例：オール3＝換算内申39 → 39÷65×300＝180点）。</li>
+        <li>換算内申は主要5教科（国・数・理・社・英）が5段階そのまま、副教科4科（音・美・保体・技家）が2倍で、<b>65点満点</b>です。</li>
+        <li>学力検査は5科500点満点を <b>×1.4（700点満点）</b>に換算します。理数科・科学技術系などは数学・理科を1.5倍する傾斜配点が行われます（本アプリではチェックで対応）。</li>
+        <li><b>ESAT-J（英語スピーキングテスト）は20点満点</b>で加点され、総合は1020点満点になります（ご指定どおり、既定では計算に含めていません）。</li>
+        <li><b>内蔵の学校データ</b>は外部サイトの一覧表を転記したものです（偏差値・合格基準点＝A1-Networksのめやす表、換算内申のめやす＝高校受験ナビ 2027年春入試用）。模試や年度で数値は動くため、志望校決定の場面では必ず最新の模試資料で確認し、必要なら手入力で上書きしてください。</li>
+        <li>Vもぎの合格基準点は「合格可能性60%の位置」を示すもので、合格最低点や合格者平均点ではありません。判定（S〜E）は目安としてご利用ください。</li>
+        <li><b>Vもぎ→本番の難易度補正（換算総合得点への反映）：</b>VもぎはW模擬と比べて難易度が高く、本番の都立入試の得点と乖離があるため、実施月ごとに補正係数を掛けて本番予想得点に換算しています。<b>5〜11月実施分：Vもぎ5科合計×1.2</b>が本番予想5科得点の目安、<b>12〜3月実施分：×1.1</b>（入試直前期は難易度差が縮まる傾向）。この係数は塾講師の実績データ・生徒の模試結果と都立入試本番の得点比較から導出されたものです。換算総合得点＝調査書点＋（5科合計×補正係数×1.4）で算出し、グラフにも反映しています。</li>
+      </ul>
+      <div class="notes">
+        <b>主な参考情報</b>
+        <ul>
+          <li><a href="https://www.school-data.com/q_and_a/detail.php/cid=38" target="_blank" rel="noopener">Vもぎの合格可能性（S＝90%以上／A＝80%以上／B＝60%以上／C＝40%以上／D＝20%以上／E＝19%以下）</a></li>
+          <li><a href="https://www.kobekyo.com/column/tokyohighschool-schoolreport/" target="_blank" rel="noopener">換算内申を300点満点に置き換える計算式（換算内申÷65×300）</a></li>
+          <li><a href="https://jyuku-online.com/blog/jj-torinai/" target="_blank" rel="noopener">都立入試の調査書点を300点に換算する計算方法</a></li>
+          <li><a href="https://www.tomoeigojuku.com/conversion.html" target="_blank" rel="noopener">都立高校の内申と学力検査の換算方法（計算例）</a></li>
+          <li><a href="https://www.kyoiku.metro.tokyo.lg.jp/documents/d/kyoiku/07_100" target="_blank" rel="noopener">東京都教育委員会：ESAT-J評価の点数化（20点満点）</a></li>
+          <li><a href="https://note.com/yohashi/n/n1568278851b7" target="_blank" rel="noopener">Vもぎ判定偏差値の判定幅（80%−60%差の平均 約2.2）に関する分析</a></li>
+          <li><a href="https://a1-networks.com/607/" target="_blank" rel="noopener">A1-Networks：志望校のめやす表（偏差値・総合得点・試験得点）</a></li>
+          <li><a href="https://www.ko-jukennavi.net/nyushi/hensachi/tokyo/" target="_blank" rel="noopener">高校受験ナビ：2027年春（令和9年度）入試用 都立高校 合格可能性80%「偏差値」＆「換算内申」めやす</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+<div class="modal no-print" id="rosterModal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>保存した生徒一覧</h3>
+      <button id="rosterClose">✕ 閉じる</button>
+    </div>
+    <p class="small muted" style="margin-top:6px">名前をクリックすると、その生徒のデータを読み込んで編集画面へ移動します。</p>
+    <input id="rosterSearch" placeholder="名前で絞り込み" style="margin-top:10px" />
+    <div id="rosterList" class="roster-list"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- 学校検索モーダル -->
+<div class="school-modal no-print" id="schoolModal" hidden>
+  <div class="school-modal-card">
+    <div class="school-modal-head">
+      <h3>学校を検索して選択</h3>
+      <button id="schoolModalClose">✕ 閉じる</button>
+    </div>
+    <div class="school-search-row">
+      <input id="schoolSearchInput" placeholder="学校名で絞り込み（例：日比谷、町田、国立）" autocomplete="off" />
+      <select id="schoolAreaFilter"><option value="">全エリア</option></select>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span class="small muted">タブで絞り込み：</span>
+      <div class="school-tabs" id="schoolTabs"></div>
+    </div>
+    <div class="school-list" id="schoolList2"></div>
+  </div>
+</div>
+
+<script>
+/* ===================== CALC-START ===================== */
+const MAIN_SUBJECTS = ['japanese','math','english','social','science'];
+const SUB_SUBJECTS  = ['music','art','pe','tech'];
+const SUBJECT_LABELS = {
+  japanese:'国語', math:'数学', science:'理科', social:'社会', english:'英語',
+  music:'音楽', art:'美術', pe:'保健体育', tech:'技術・家庭'
+};
+const SUBJECT_COLORS = {
+  japanese:'#4f6df5', math:'#e05c8a', english:'#7c5cf0', science:'#0e9f6e', social:'#d9a300'
+};
+
+/* 換算内申（65点満点）→ 調査書点（300点満点） */
+function calcNaishin(naishin){
+  let raw = 0, mainSum = 0, subSum = 0;
+  MAIN_SUBJECTS.forEach(function(k){ var v = Number(naishin[k] || 0); mainSum += v; raw += v; });
+  SUB_SUBJECTS.forEach(function(k){ var v = Number(naishin[k] || 0); subSum += v; raw += v * 2; });
+  return {
+    naishin65: raw,
+    mainSum: mainSum,
+    subSum: subSum,
+    shinsho: Math.round(raw / 65 * 300 * 10) / 10
+  };
+}
+
+/* 5科の素点（500点満点）→ 学力検査点（700点満点） */
+function calcToujitsu(scores, incline){
+  var s = {}, total5 = 0;
+  MAIN_SUBJECTS.forEach(function(k){ s[k] = Number(scores[k] || 0); total5 += s[k]; });
+  var base, baseMax;
+  if (incline){                       // 理数科など：数学・理科を1.5倍
+    base = s.japanese + s.social + s.math * 1.5 + s.science * 1.5 + s.english;
+    baseMax = 600;
+  } else {
+    base = total5;
+    baseMax = 500;
+  }
+  return {
+    total5: total5,
+    base: base,
+    baseMax: baseMax,
+    incline: !!incline,
+    score700: Math.round(base / baseMax * 700 * 10) / 10
+  };
+}
+
+/* Vもぎ補正倍率（実施月から本番難易度係数を返す）
+   5〜11月のVもぎ：×1.2 ／ 12〜3月のVもぎ：×1.1 */
+function vmogiFactor(dateStr){
+  if (!dateStr) return 1.2;
+  var m = parseInt(String(dateStr).slice(5, 7), 10);
+  return (m >= 1 && m <= 3 || m === 12) ? 1.1 : 1.2;
+}
+
+/* 総合得点（1000点満点／ESAT-J使用時は1020点満点） */
+function calcTotal(shinsho, score700, esatj){
+  return Math.round((Number(shinsho || 0) + Number(score700 || 0) + Number(esatj || 0)) * 10) / 10;
+}
+
+/* 差と判定幅から Vもぎ判定（S〜E）を求める */
+function judgeRank(diff, width){
+  var w = Math.abs(Number(width)) || 0;
+  if (w === 0) return 'B';
+  if (diff >= w * 2)  return 'S';
+  if (diff >= w)      return 'A';
+  if (diff >= 0)      return 'B';
+  if (diff >= -w)     return 'C';
+  if (diff >= -w * 2) return 'D';
+  return 'E';
+}
+
+const RANK_INFO = {
+  S:{ prob:'90%以上', note:'安全圏' },
+  A:{ prob:'80%以上', note:'合格圏' },
+  B:{ prob:'60%以上', note:'合格圏内' },
+  C:{ prob:'40%以上', note:'努力圏' },
+  D:{ prob:'20%以上', note:'要強化' },
+  E:{ prob:'20%未満', note:'要面談' }
+};
+/* ===================== CALC-END ===================== */
+
+/* ===================== SCHOOL-DB-START ===================== */
+const SCHOOL_DB = [
+  {area:"旧1学区",full:"都立日比谷高等学校",dev:70,total:895,exam:425,naishin:63,dev80:71,src:"A1"},
+  {area:"旧1学区",full:"都立小山台高等学校",dev:62,total:815,exam:368,naishin:58,dev80:63,src:"A1"},
+  {area:"旧1学区",full:"都立三田高等学校",dev:62,total:805,exam:361,naishin:59,dev80:63,src:"A1"},
+  {area:"旧1学区",full:"都立雪谷高等学校",dev:53,total:675,exam:268,naishin:48,dev80:54,src:"A1"},
+  {area:"旧1学区",full:"都立田園調布高等学校",dev:52,total:650,exam:250,naishin:46,dev80:52,src:"A1"},
+  {area:"旧1学区",full:"都立大崎高等学校",dev:43,total:515,exam:154,naishin:41,dev80:44,src:"A1"},
+  {area:"旧1学区",full:"都立八潮高等学校",dev:36,total:400,exam:71,naishin:33,dev80:35,src:"A1"},
+  {area:"旧1学区",full:"都立大森高等学校",dev:33,total:350,exam:36,naishin:31,dev80:33,src:"A1"},
+  {area:"旧2学区",full:"都立戸山高等学校",dev:66,total:860,exam:400,naishin:61,dev80:68,src:"A1"},
+  {area:"旧2学区",full:"都立青山高等学校",dev:66,total:855,exam:396,naishin:62,dev80:67,src:"A1"},
+  {area:"旧2学区",full:"都立駒場高等学校",dev:62,total:810,exam:364,naishin:58,dev80:63,src:"A1"},
+  {area:"旧2学区",full:"都立目黒高等学校",dev:58,total:740,exam:314,naishin:51,dev80:58,src:"A1"},
+  {area:"旧2学区",full:"都立広尾高等学校",dev:54,total:675,exam:268,naishin:49,dev80:55,src:"A1"},
+  {area:"旧2学区",full:"都立松原高等学校",dev:45,total:540,exam:171,naishin:40,dev80:44,src:"A1"},
+  {area:"旧2学区",full:"都立桜町高等学校",dev:41,total:475,exam:125,naishin:38,dev80:40,src:"A1"},
+  {area:"旧2学区",full:"都立千歳丘高等学校",dev:38,total:420,exam:86,naishin:35,dev80:36,src:"A1"},
+  {area:"旧2学区",full:"都立深沢高等学校",dev:36,total:395,exam:68,naishin:null,dev80:null,src:"A1"},
+  {area:"旧3学区",full:"都立西高等学校",dev:67,total:860,exam:400,naishin:61,dev80:69,src:"A1"},
+  {area:"旧3学区",full:"都立豊多摩高等学校",dev:61,total:780,exam:343,naishin:54,dev80:61,src:"A1"},
+  {area:"旧3学区",full:"都立井草高等学校",dev:56,total:705,exam:289,naishin:49,dev80:57,src:"A1"},
+  {area:"旧3学区",full:"都立石神井高等学校",dev:56,total:710,exam:293,naishin:49,dev80:56,src:"A1"},
+  {area:"旧3学区",full:"都立武蔵丘高等学校",dev:52,total:645,exam:246,naishin:46,dev80:52,src:"A1"},
+  {area:"旧3学区",full:"都立杉並高等学校",dev:48,total:580,exam:200,naishin:42,dev80:47,src:"A1"},
+  {area:"旧3学区",full:"都立鷺宮高等学校",dev:48,total:580,exam:200,naishin:45,dev80:49,src:"A1"},
+  {area:"旧3学区",full:"都立光丘高等学校",dev:38,total:430,exam:93,naishin:33,dev80:34,src:"A1"},
+  {area:"旧3学区",full:"都立練馬高等学校",dev:38,total:430,exam:93,naishin:35,dev80:38,src:"A1"},
+  {area:"旧3学区",full:"都立田柄高等学校",dev:35,total:380,exam:57,naishin:31,dev80:32,src:"A1"},
+  {area:"旧4学区",full:"都立竹早高等学校",dev:62,total:825,exam:375,naishin:59,dev80:64,src:"A1"},
+  {area:"旧4学区",full:"都立北園高等学校",dev:60,total:795,exam:354,naishin:56,dev80:61,src:"A1"},
+  {area:"旧4学区",full:"都立文京高等学校",dev:58,total:750,exam:321,naishin:52,dev80:58,src:"A1"},
+  {area:"旧4学区",full:"都立豊島高等学校",dev:54,total:685,exam:275,naishin:50,dev80:56,src:"A1"},
+  {area:"旧4学区",full:"都立向丘高等学校",dev:51,total:635,exam:239,naishin:47,dev80:51,src:"A1"},
+  {area:"旧4学区",full:"都立高島高等学校",dev:45,total:535,exam:168,naishin:41,dev80:44,src:"A1"},
+  {area:"旧4学区",full:"都立板橋高等学校",dev:42,total:490,exam:136,naishin:41,dev80:43,src:"A1"},
+  {area:"旧4学区",full:"都立大山高等学校",dev:34,total:370,exam:50,naishin:32,dev80:33,src:"A1"},
+  {area:"旧5学区",full:"都立上野高等学校",dev:58,total:740,exam:314,naishin:53,dev80:59,src:"A1"},
+  {area:"旧5学区",full:"都立江北高等学校",dev:50,total:630,exam:236,naishin:47,dev80:53,src:"A1"},
+  {area:"旧5学区",full:"都立足立高等学校",dev:45,total:550,exam:179,naishin:43,dev80:46,src:"A1"},
+  {area:"旧5学区",full:"都立足立西高等学校",dev:42,total:495,exam:139,naishin:38,dev80:40,src:"A1"},
+  {area:"旧5学区",full:"都立足立新田高等学校",dev:40,total:465,exam:118,naishin:35,dev80:36,src:"A1"},
+  {area:"旧5学区",full:"都立竹台高等学校",dev:40,total:465,exam:118,naishin:40,dev80:42,src:"A1"},
+  {area:"旧5学区",full:"都立淵江高等学校",dev:38,total:425,exam:89,naishin:35,dev80:36,src:"A1"},
+  {area:"旧5学区",full:"都立青井高等学校",dev:34,total:365,exam:46,naishin:31,dev80:32,src:"A1"},
+  {area:"旧6学区",full:"都立小松川高等学校",dev:61,total:790,exam:350,naishin:55,dev80:61,src:"A1"},
+  {area:"旧6学区",full:"都立城東高等学校",dev:61,total:785,exam:346,naishin:57,dev80:60,src:"A1"},
+  {area:"旧6学区",full:"都立江戸川高等学校",dev:55,total:695,exam:282,naishin:50,dev80:56,src:"A1"},
+  {area:"旧6学区",full:"都立深川高等学校",dev:53,total:670,exam:264,naishin:48,dev80:54,src:"A1"},
+  {area:"旧6学区",full:"都立東高等学校",dev:52,total:655,exam:254,naishin:45,dev80:51,src:"A1"},
+  {area:"旧6学区",full:"都立本所高等学校",dev:49,total:600,exam:214,naishin:46,dev80:49,src:"A1"},
+  {area:"旧6学区",full:"都立小岩高等学校",dev:49,total:595,exam:211,naishin:45,dev80:49,src:"A1"},
+  {area:"旧6学区",full:"都立紅葉川高等学校",dev:46,total:545,exam:175,naishin:41,dev80:44,src:"A1"},
+  {area:"旧6学区",full:"都立日本橋高等学校",dev:42,total:490,exam:136,naishin:39,dev80:41,src:"A1"},
+  {area:"旧6学区",full:"都立葛飾野高等学校",dev:41,total:485,exam:132,naishin:39,dev80:40,src:"A1"},
+  {area:"旧6学区",full:"都立篠崎高等学校",dev:42,total:480,exam:129,naishin:38,dev80:40,src:"A1"},
+  {area:"旧6学区",full:"都立南葛飾高等学校",dev:39,total:445,exam:104,naishin:37,dev80:37,src:"A1"},
+  {area:"旧6学区",full:"都立葛西南高等学校",dev:35,total:385,exam:61,naishin:31,dev80:33,src:"A1"},
+  {area:"旧7学区",full:"都立八王子東高等学校",dev:64,total:830,exam:379,naishin:57,dev80:65,src:"A1"},
+  {area:"旧7学区",full:"都立町田高等学校",dev:60,total:790,exam:350,naishin:54,dev80:60,src:"A1"},
+  {area:"旧7学区",full:"都立日野台高等学校",dev:60,total:785,exam:346,naishin:54,dev80:60,src:"A1"},
+  {area:"旧7学区",full:"都立南平高等学校",dev:57,total:740,exam:314,naishin:50,dev80:57,src:"A1"},
+  {area:"旧7学区",full:"都立成瀬高等学校",dev:53,total:660,exam:257,naishin:45,dev80:52,src:"A1"},
+  {area:"旧7学区",full:"都立松が谷高等学校",dev:50,total:610,exam:221,naishin:44,dev80:49,src:"A1"},
+  {area:"旧7学区",full:"都立富士森高等学校",dev:48,total:585,exam:204,naishin:43,dev80:48,src:"A1"},
+  {area:"旧7学区",full:"都立日野高等学校",dev:47,total:575,exam:196,naishin:43,dev80:48,src:"A1"},
+  {area:"旧7学区",full:"都立小川高等学校",dev:46,total:550,exam:179,naishin:41,dev80:45,src:"A1"},
+  {area:"旧7学区",full:"都立片倉高等学校",dev:43,total:515,exam:154,naishin:41,dev80:43,src:"A1"},
+  {area:"旧7学区",full:"都立八王子北高等学校",dev:43,total:505,exam:146,naishin:39,dev80:40,src:"A1"},
+  {area:"旧7学区",full:"都立山崎高等学校",dev:39,total:440,exam:100,naishin:35,dev80:36,src:"A1"},
+  {area:"旧7学区",full:"都立野津田高等学校",dev:34,total:375,exam:54,naishin:31,dev80:33,src:"A1"},
+  {area:"旧8学区",full:"都立立川高等学校",dev:65,total:845,exam:389,naishin:60,dev80:66,src:"A1"},
+  {area:"旧8学区",full:"都立昭和高等学校",dev:61,total:790,exam:350,naishin:55,dev80:61,src:"A1"},
+  {area:"旧8学区",full:"都立東大和南高等学校",dev:56,total:725,exam:304,naishin:50,dev80:55,src:"A1"},
+  {area:"旧8学区",full:"都立東大和高等学校",dev:48,total:595,exam:211,naishin:43,dev80:47,src:"A1"},
+  {area:"旧8学区",full:"都立福生高等学校",dev:44,total:525,exam:161,naishin:41,dev80:43,src:"A1"},
+  {area:"旧8学区",full:"都立武蔵村山高等学校",dev:41,total:480,exam:129,naishin:38,dev80:39,src:"A1"},
+  {area:"旧8学区",full:"都立拝島高等学校",dev:38,total:425,exam:89,naishin:35,dev80:35,src:"A1"},
+  {area:"旧8学区",full:"都立羽村高等学校",dev:36,total:400,exam:71,naishin:33,dev80:34,src:"A1"},
+  {area:"旧8学区",full:"都立多摩高等学校",dev:35,total:385,exam:61,naishin:32,dev80:33,src:"A1"},
+  {area:"旧8学区",full:"都立五日市高等学校",dev:33,total:360,exam:43,naishin:31,dev80:32,src:"A1"},
+  {area:"旧9学区",full:"都立武蔵野北高等学校",dev:62,total:810,exam:364,naishin:56,dev80:64,src:"A1"},
+  {area:"旧9学区",full:"都立小金井北高等学校",dev:61,total:795,exam:354,naishin:55,dev80:61,src:"A1"},
+  {area:"旧9学区",full:"都立小平高等学校",dev:56,total:715,exam:296,naishin:49,dev80:56,src:"A1"},
+  {area:"旧9学区",full:"都立清瀬高等学校",dev:54,total:680,exam:271,naishin:46,dev80:52,src:"A1"},
+  {area:"旧9学区",full:"都立小平南高等学校",dev:54,total:680,exam:271,naishin:47,dev80:54,src:"A1"},
+  {area:"旧9学区",full:"都立保谷高等学校",dev:50,total:620,exam:229,naishin:44,dev80:50,src:"A1"},
+  {area:"旧9学区",full:"都立田無高等学校",dev:44,total:520,exam:157,naishin:41,dev80:44,src:"A1"},
+  {area:"旧9学区",full:"都立久留米西高等学校",dev:42,total:490,exam:136,naishin:37,dev80:39,src:"A1"},
+  {area:"旧9学区",full:"都立小平西高等学校",dev:41,total:475,exam:125,naishin:39,dev80:40,src:"A1"},
+  {area:"旧9学区",full:"都立東村山西高等学校",dev:39,total:450,exam:107,naishin:35,dev80:35,src:"A1"},
+  {area:"旧10学区",full:"都立国立高等学校",dev:67,total:865,exam:404,naishin:61,dev80:68,src:"A1"},
+  {area:"旧10学区",full:"都立調布北高等学校",dev:61,total:780,exam:343,naishin:52,dev80:60,src:"A1"},
+  {area:"旧10学区",full:"都立狛江高等学校",dev:58,total:745,exam:318,naishin:52,dev80:57,src:"A1"},
+  {area:"旧10学区",full:"都立神代高等学校",dev:56,total:700,exam:286,naishin:50,dev80:56,src:"A1"},
+  {area:"旧10学区",full:"都立調布南高等学校",dev:55,total:690,exam:279,naishin:48,dev80:55,src:"A1"},
+  {area:"旧10学区",full:"都立府中高等学校",dev:53,total:660,exam:257,naishin:45,dev80:52,src:"A1"},
+  {area:"旧10学区",full:"都立府中西高等学校",dev:45,total:540,exam:171,naishin:41,dev80:44,src:"A1"},
+  {area:"旧10学区",full:"都立府中東高等学校",dev:44,total:515,exam:154,naishin:41,dev80:44,src:"A1"},
+  {area:"旧10学区",full:"都立永山高等学校",dev:39,total:450,exam:107,naishin:36,dev80:38,src:"A1"},
+  {area:"単位制",full:"都立新宿高等学校",dev:64,total:835,exam:382,naishin:60,dev80:66,src:"A1"},
+  {area:"単位制",full:"都立国分寺高等学校",dev:62,total:825,exam:375,naishin:57,dev80:62,src:"A1"},
+  {area:"単位制",full:"都立墨田川高等学校",dev:53,total:680,exam:271,naishin:48,dev80:54,src:"A1"},
+  {area:"単位制",full:"都立翔陽高等学校",dev:51,total:645,exam:246,naishin:43,dev80:49,src:"A1"},
+  {area:"単位制",full:"都立上水高等学校",dev:52,total:665,exam:261,naishin:46,dev80:52,src:"A1"},
+  {area:"単位制",full:"都立芦花高等学校",dev:50,total:630,exam:236,naishin:46,dev80:52,src:"A1"},
+  {area:"単位制",full:"都立飛鳥高等学校",dev:43,total:510,exam:150,naishin:40,dev80:42,src:"A1"},
+  {area:"単位制",full:"都立板橋有徳高等学校",dev:39,total:455,exam:111,naishin:36,dev80:37,src:"A1"},
+  {area:"単位制",full:"都立忍岡高等学校",dev:42,total:495,exam:139,naishin:38,dev80:40,src:"A1"},
+  {area:"単位制",full:"都立大泉桜高等学校",dev:41,total:475,exam:125,naishin:37,dev80:39,src:"A1"},
+  {area:"単位制",full:"都立美原高等学校",dev:39,total:460,exam:114,naishin:38,dev80:38,src:"A1"},
+  {area:"コース制",full:"都立小平高等学校（コース制）",dev:53,total:690,exam:279,naishin:null,dev80:null,src:"A1"},
+  {area:"コース制",full:"都立深川高等学校（コース制）",dev:51,total:655,exam:254,naishin:null,dev80:null,src:"A1"},
+  {area:"コース制",full:"都立松が谷高等学校（コース制）",dev:47,total:575,exam:196,naishin:null,dev80:null,src:"A1"},
+  {area:"コース制",full:"都立片倉高等学校（コース制）",dev:42,total:495,exam:139,naishin:null,dev80:null,src:"A1"},
+  {area:"外国語コース",full:"都立小平高等学校（外国語コース）",dev:56,total:null,exam:null,naishin:49,dev80:56,src:"J"},
+  {area:"外国語コース",full:"都立深川高等学校（外国語コース）",dev:54,total:null,exam:null,naishin:48,dev80:54,src:"J"},
+  {area:"外国語コース",full:"都立松が谷高等学校（外国語コース）",dev:47,total:null,exam:null,naishin:42,dev80:47,src:"J"},
+  {area:"学科",full:"都立国際高等学校（国際科）",dev:64,total:null,exam:null,naishin:59,dev80:64,src:"J"},
+  {area:"学科",full:"都立立川高等学校（創造理数科）",dev:69,total:null,exam:null,naishin:61,dev80:69,src:"J"},
+  {area:"学科",full:"都立多摩科学技術高等学校",dev:60,total:null,exam:null,naishin:47,dev80:60,src:"J"},
+  {area:"総合学科",full:"都立晴海総合高等学校",dev:50,total:null,exam:null,naishin:45,dev80:50,src:"J"},
+  {area:"総合学科",full:"都立青梅総合高等学校",dev:48,total:null,exam:null,naishin:42,dev80:48,src:"J"},
+  {area:"総合学科",full:"都立杉並総合高等学校",dev:45,total:null,exam:null,naishin:42,dev80:45,src:"J"},
+  {area:"総合学科",full:"都立つばさ総合高等学校",dev:43,total:null,exam:null,naishin:39,dev80:43,src:"J"},
+  {area:"総合学科",full:"都立王子総合高等学校",dev:43,total:null,exam:null,naishin:40,dev80:43,src:"J"},
+  {area:"総合学科",full:"都立東久留米総合高等学校",dev:42,total:null,exam:null,naishin:39,dev80:42,src:"J"},
+  {area:"総合学科",full:"都立若葉総合高等学校",dev:39,total:null,exam:null,naishin:38,dev80:39,src:"J"},
+  {area:"総合学科",full:"都立世田谷総合高等学校",dev:39,total:null,exam:null,naishin:37,dev80:39,src:"J"},
+  {area:"総合学科",full:"都立葛飾総合高等学校",dev:38,total:null,exam:null,naishin:38,dev80:38,src:"J"},
+  {area:"総合学科",full:"都立町田総合高等学校",dev:38,total:null,exam:null,naishin:36,dev80:38,src:"J"},
+  {area:"商業科",full:"都立芝商業高等学校",dev:39,total:440,exam:100,naishin:null,dev80:null,src:"A1"},
+  {area:"商業科",full:"都立江東商業高等学校",dev:36,total:405,exam:75,naishin:null,dev80:null,src:"A1"},
+  {area:"商業科",full:"都立第五商業高等学校",dev:43,total:515,exam:154,naishin:null,dev80:null,src:"A1"},
+  {area:"商業科",full:"都立千早高等学校",dev:44,total:525,exam:161,naishin:null,dev80:null,src:"A1"},
+  {area:"商業科",full:"都立葛飾商業高等学校",dev:35,total:385,exam:61,naishin:null,dev80:null,src:"A1"},
+  {area:"商業科",full:"都立第一商業高等学校",dev:36,total:405,exam:75,naishin:null,dev80:null,src:"A1"},
+  {area:"商業科",full:"都立第三商業高等学校",dev:36,total:400,exam:71,naishin:null,dev80:null,src:"A1"},
+  {area:"商業科",full:"都立第四商業高等学校",dev:35,total:385,exam:61,naishin:null,dev80:null,src:"A1"},
+  {area:"商業科",full:"都立大田桜台高等学校",dev:36,total:400,exam:71,naishin:null,dev80:null,src:"A1"},
+  {area:"工業科",full:"都立工芸高等学校（デザイン）",dev:55,total:700,exam:286,naishin:null,dev80:null,src:"A1"},
+  {area:"工業科",full:"都立工芸高等学校（グラフィック）",dev:53,total:670,exam:264,naishin:null,dev80:null,src:"A1"},
+  {area:"工業科",full:"都立工芸高等学校（インテリア）",dev:52,total:655,exam:254,naishin:null,dev80:null,src:"A1"},
+  {area:"工業科",full:"都立工芸高等学校（アートクラフト）",dev:51,total:645,exam:246,naishin:null,dev80:null,src:"A1"},
+  {area:"工業科",full:"都立工芸高等学校（マシンクラフト）",dev:49,total:600,exam:214,naishin:null,dev80:null,src:"A1"},
+  {area:"工業科",full:"都立総合工科高等学校（電気・情報デザイン）",dev:35,total:385,exam:61,naishin:null,dev80:null,src:"A1"},
+  {area:"工業科",full:"都立府中工科高等学校（情報技術）",dev:40,total:470,exam:121,naishin:null,dev80:null,src:"A1"}
+];
+const SCHOOL_SRC = {
+  A1: { label: 'A1-Networks 志望校めやす表（2025.12.22更新）', url: 'https://a1-networks.com/607/' },
+  J:  { label: '高校受験ナビ 2027年春（令和9年度）入試用 合格可能性80%めやす', url: 'https://www.ko-jukennavi.net/nyushi/hensachi/tokyo/' }
+};
+function normSchool(v){
+  return String(v == null ? '' : v)
+    .replace(/[\s\u3000]/g, '')
+    .replace(/^(東京都立|都立)/, '')
+    .replace(/(高等学校|高校)$/, '');
+}
+function esc(s){
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function schoolCandidates(q){
+  var n = normSchool(q);
+  if (!n) return [];
+  var hit = SCHOOL_DB.filter(function(d){ return normSchool(d.full).indexOf(n) >= 0; });
+  return hit.sort(function(a, b){ return normSchool(a.full).length - normSchool(b.full).length; });
+}
+function schoolSrcLabel(d){ return (SCHOOL_SRC[d.src] || SCHOOL_SRC.A1).label; }
+function buildSrcNote(d){
+  var t = [];
+  if (d.total != null){
+    t.push('合格基準点 ' + d.total + '点（1000点満点）・偏差値 ' + d.dev + '｜出典：' + schoolSrcLabel(d));
+  } else {
+    t.push('偏差値 ' + d.dev + '｜出典：' + schoolSrcLabel(d) + '（この学校の合格基準点はデータ未収録です。模試の資料から入力してください）');
+  }
+  if (d.naishin != null) t.push('換算内申のめやす ' + d.naishin + '（合格可能性80%ライン）');
+  return t.join(' ／ ');
+}
+function applySchoolLookup(i, q, notify){
+  var s = current(); if (!s) return;
+  var sc = s.schools[i];
+  var txt = String(q == null ? '' : q).trim();
+  if (!txt){ sc.srcNote = ''; sc.naishinRef = null; sc.dev80 = null; sc.auto = false; return; }
+  var cands = schoolCandidates(txt);
+  var exact = cands.filter(function(d){
+    return normSchool(d.full) === normSchool(txt) + '高等学校' || normSchool(d.full) === normSchool(txt);
+  });
+  var hit = exact[0] || (cands.length === 1 ? cands[0] : null);
+  if (!hit){
+    if (cands.length > 1){
+      sc.srcNote = '';
+      sc.candNote = '候補が複数あります：' + cands.slice(0, 8).map(function(d){ return d.full; }).join('、') + '　→ 一覧から選ぶと自動入力します';
+    } else {
+      sc.srcNote = '登録データに一致する学校がありませんでした（偏差値・基準点は手入力してください）';
+      sc.candNote = '';
+    }
+    sc.auto = false;
+    return;
+  }
+  sc.name = hit.full;
+  sc.dev = hit.dev;
+  sc.kijun = (hit.total == null) ? '' : hit.total;
+  sc.naishinRef = hit.naishin;
+  sc.dev80 = hit.dev80;
+  sc.area = hit.area;
+  sc.src = hit.src;
+  sc.srcNote = buildSrcNote(hit);
+  sc.candNote = '';
+  sc.auto = true;
+  var inp = document.querySelector('[data-school="' + i + '"][data-field="name"]');
+  if (inp) inp.value = hit.full;
+  if (notify) toast(hit.full + ' の偏差値・基準点を反映しました');
+}
+function buildSchoolList(){
+  if (document.getElementById('schoolList')) return;
+  var dl = document.createElement('datalist');
+  dl.id = 'schoolList';
+  dl.innerHTML = SCHOOL_DB.map(function(d){ return '<option value="' + esc(d.full) + '">' + esc(d.area + '　偏差値' + d.dev + (d.total != null ? '／基準点' + d.total : '')) + '</option>'; }).join('');
+  document.body.appendChild(dl);
+}
+function estimateProb(diff, width){
+  var w = Math.abs(Number(width)) || 0;
+  if (!w) return 60;
+  var p = 60 + (Number(diff) / w) * 20;
+  return Math.max(5, Math.min(97, Math.round(p)));
+}
+/* ===================== SCHOOL-DB-END ===================== */
+
+/* ---------------- 保存した生徒ナビ ---------------- */
+function updateRoster(){ var el = $('rosterCount'); if (el) el.textContent = state.students.length; }
+function openRoster(){ renderRoster(); $('rosterModal').hidden = false; $('rosterSearch').value = ''; renderRoster(); setTimeout(function(){ $('rosterSearch').focus(); }, 60); }
+function closeRoster(){ $('rosterModal').hidden = true; }
+function renderRoster(){
+  var box = $('rosterList'); if (!box) return;
+  var q = String($('rosterSearch').value || '').trim().toLowerCase();
+  var list = state.students.filter(function(s){ return !q || String(s.name || '').toLowerCase().indexOf(q) >= 0; });
+  if (!list.length){
+    box.innerHTML = '<p class="small muted" style="padding:10px 2px">該当する生徒がいません。「＋ 新規生徒」で追加できます。</p>';
+    return;
+  }
+  box.innerHTML = list.map(function(s){
+    var nai = calcNaishin(s.naishin || {});
+    var tou = calcToujitsu(currentToujitsuScores(s), s.incline);
+    var esatj = (s.esatj && s.esatj.enabled) ? Number(s.esatj.score || 0) : 0;
+    var tot = calcTotal(nai.shinsho, tou.score700, esatj);
+    var lm = latestMock(s);
+    var d5 = (lm && lm.dev5 !== '' && lm.dev5 != null) ? ('5科偏差値 ' + lm.dev5) : '5科偏差値 —';
+    var memo = String(s.memo || '');
+    if (memo.length > 42) memo = memo.slice(0, 42) + '…';
+    return '<div class="roster-item' + (s.id === state.currentId ? ' on' : '') + '" data-sid="' + s.id + '">' +
+      '<div><div class="ri-name">' + esc(s.name || '（名称未設定）') + '</div>' +
+      '<div class="ri-meta">調査書点 ' + fmt(nai.shinsho) + '／本番予想の総合得点 ' + fmt(tot) + '／模試 ' + s.mocks.length + '回／' + d5 + '</div>' +
+      (memo ? '<div class="ri-meta">' + esc(memo) + '</div>' : '') +
+      '</div><button class="small primary">開く</button></div>';
+  }).join('');
+}
+function goToStudent(id){
+  state.currentId = id;
+  save();
+  buildStatic(); buildSchools(); buildMocks(); refresh(); updateRoster();
+  closeRoster();
+  var sec = $('studentSection');
+  if (sec){
+    sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    sec.classList.remove('flash');
+    void sec.offsetWidth;
+    sec.classList.add('flash');
+  }
+  toast('「' + ((current() && current().name) || '') + '」を読み込みました');
+}
+
+
+/* ---------------- 状態管理 ---------------- */
+const LS_KEY = 'toritsu_sim_v1';
+
+/* ---------------- GitHub 同期（Contents API / repo scope） ---------------- */
+const SYNC_KEY = 'toritsu_sim_sync_v1';
+const SYNC_REPO = 'yutotakeuchi5m-jpg/-';
+const SYNC_FILE = 'simulator-data.json';
+const SYNC_BRANCH = 'main';
+
+function getSyncSettings(){
+  try { return JSON.parse(localStorage.getItem(SYNC_KEY) || '{}'); } catch(e){ return {}; }
+}
+function setSyncSettings(obj){
+  try { localStorage.setItem(SYNC_KEY, JSON.stringify(obj)); } catch(e){}
+}
+function setSyncUI(status, msg){
+  var el = $('syncStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'sync-status' + (status === 'error' ? ' error' : status === 'saving' ? ' saving' : '');
+}
+
+var _syncSaveTimer = null;
+function saveToGithub(){
+  clearTimeout(_syncSaveTimer);
+  _syncSaveTimer = setTimeout(function(){
+    var gs = getSyncSettings();
+    if (!gs.pat) return;
+    var repo = gs.repo || SYNC_REPO;
+    var branch = gs.branch || SYNC_BRANCH;
+    var apiBase = 'https://api.github.com/repos/' + repo + '/contents/' + SYNC_FILE;
+    // First GET to obtain current SHA
+    var xhrGet = new XMLHttpRequest();
+    xhrGet.open('GET', apiBase + '?ref=' + branch);
+    xhrGet.setRequestHeader('Authorization', 'token ' + gs.pat);
+    xhrGet.setRequestHeader('Accept', 'application/vnd.github+json');
+    xhrGet.onload = function(){
+      var sha = null;
+      if (xhrGet.status === 200){
+        try { sha = JSON.parse(xhrGet.responseText).sha; } catch(e){}
+      }
+      var content = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+      var putBody = JSON.stringify({ message: 'sync: simulator auto-save', content: content, branch: branch, sha: sha || undefined });
+      var xhrPut = new XMLHttpRequest();
+      xhrPut.open('PUT', apiBase);
+      xhrPut.setRequestHeader('Authorization', 'token ' + gs.pat);
+      xhrPut.setRequestHeader('Content-Type', 'application/json');
+      xhrPut.setRequestHeader('Accept', 'application/vnd.github+json');
+      xhrPut.onload = function(){
+        if (xhrPut.status === 200 || xhrPut.status === 201){
+          setSyncUI('ok', '☁ 同期済み ' + new Date().toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'}));
+        } else {
+          setSyncUI('error', '☁ 同期失敗(' + xhrPut.status + ')');
+        }
+      };
+      xhrPut.onerror = function(){ setSyncUI('error', '☁ ネットワークエラー'); };
+      setSyncUI('saving', '☁ 同期中…');
+      xhrPut.send(putBody);
+    };
+    xhrGet.onerror = function(){ setSyncUI('error', '☁ ネットワークエラー'); };
+    xhrGet.send();
+  }, 2000);
+}
+
+function pullFromGithub(callback){
+  var gs = getSyncSettings();
+  if (!gs.pat){ if (callback) callback(false); return; }
+  var repo = gs.repo || SYNC_REPO;
+  var branch = gs.branch || SYNC_BRANCH;
+  var url = 'https://api.github.com/repos/' + repo + '/contents/' + SYNC_FILE + '?ref=' + branch;
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url);
+  xhr.setRequestHeader('Authorization', 'token ' + gs.pat);
+  xhr.setRequestHeader('Accept', 'application/vnd.github+json');
+  xhr.onload = function(){
+    if (xhr.status === 200){
+      try {
+        var file = JSON.parse(xhr.responseText);
+        var decoded = decodeURIComponent(escape(atob(file.content.replace(/\s/g, ''))));
+        var p = JSON.parse(decoded);
+        if (p && Array.isArray(p.students) && p.students.length){
+          state = p;
+          if (!state.currentId || !state.students.some(function(x){ return x.id === state.currentId; }))
+            state.currentId = state.students[0].id;
+          try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e){}
+          setSyncUI('ok', '☁ GitHubから取得済み');
+          if (callback) callback(true);
+          return;
+        }
+      } catch(e){}
+    }
+    if (xhr.status === 404){
+      setSyncUI('ok', '☁ 設定済み（データなし→ローカルを使用）');
+    } else {
+      setSyncUI('error', '☁ 取得失敗(' + xhr.status + ')');
+    }
+    if (callback) callback(false);
+  };
+  xhr.onerror = function(){ setSyncUI('error', '☁ ネットワークエラー'); if (callback) callback(false); };
+  setSyncUI('saving', '☁ GitHubから取得中…');
+  xhr.send();
+}
+
+let state = { students: [], currentId: null };
+
+function uid(){ return Math.random().toString(36).slice(2, 10); }
+function $(id){ return document.getElementById(id); }
+function fmt(n, d){ d = (d === undefined) ? 1 : d; var v = Number(n); if (!isFinite(v)) return '—';
+  return (Math.round(v * Math.pow(10, d)) / Math.pow(10, d)).toLocaleString('ja-JP', { minimumFractionDigits: (v % 1 === 0 ? 0 : d), maximumFractionDigits: d }); }
+
+function newStudent(name){
+  const s = {
+    id: uid(), name: name || '新しい生徒', memo: '',
+    naishin: {}, toujitsu: {}, incline: false, autoFill: true,
+    esatj: { enabled: false, score: 0 },
+    schools: [], mocks: []
+  };
+  MAIN_SUBJECTS.concat(SUB_SUBJECTS).forEach(function(k){ s.naishin[k] = 3; });
+  MAIN_SUBJECTS.forEach(function(k){ s.toujitsu[k] = ''; });
+  for (var i = 0; i < 3; i++) s.schools.push({ name:'', kijun:'', dev:'', widthScore:30, widthDev:2.2, ratio:'' });
+  return s;
+}
+
+function blankMock(){
+  var m = { id: uid(), date:'', name:'', scores:{}, devs:{}, dev3:'', dev5:'' };
+  MAIN_SUBJECTS.forEach(function(k){ m.scores[k] = ''; m.devs[k] = ''; });
+  return m;
+}
+
+function demoStudent(){
+  var s = newStudent('サンプル生徒（書き換えてください）');
+  s.memo = 'このサンプルは動作確認用です。「＋ 新規生徒」で自分の生徒を追加してください。';
+  s.naishin = { japanese:4, math:3, science:4, social:4, english:4, music:3, art:4, pe:3, tech:4 };
+  s.toujitsu = { japanese:72, math:58, science:70, social:75, english:65 };
+  s.schools[0] = { name:'サンプルA高校（上位校）', kijun:760, dev:60, widthScore:30, widthDev:2.2, ratio:1.8 };
+  s.schools[1] = { name:'サンプルB高校（中位校）', kijun:680, dev:54, widthScore:30, widthDev:2.2, ratio:1.6 };
+  s.schools[2] = { name:'サンプルC高校（手堅い校）', kijun:600, dev:48, widthScore:30, widthDev:2.2, ratio:1.4 };
+  var rows = [
+    { date:'2026-06-14', name:'Vもぎ 第1回', sc:[62,50,58,64,58], dv:[52,47,49,54,53], d3:50, d5:51 },
+    { date:'2026-09-06', name:'Vもぎ 第3回', sc:[70,56,66,72,63], dv:[55,50,53,58,55], d3:53, d5:54 },
+    { date:'2026-10-18', name:'Vもぎ 第5回', sc:[74,62,71,76,68], dv:[57,52,56,60,57], d3:55, d5:56 }
+  ];
+  rows.forEach(function(r, i){
+    var m = blankMock();
+    m.date = r.date; m.name = r.name; m.dev3 = r.d3; m.dev5 = r.d5;
+    MAIN_SUBJECTS.forEach(function(k, j){ m.scores[k] = r.sc[j]; m.devs[k] = r.dv[j]; });
+    s.mocks.push(m);
+  });
+  return s;
+}
+
+function current(){ return state.students.find(function(s){ return s.id === state.currentId; }) || null; }
+
+var _saveTimer = null;
+var _lastSaved = null;
+
+function setSaveUI(status, msg){
+  var dot = $('saveDot'), lbl = $('saveLabel');
+  if (!dot || !lbl) return;
+  dot.className = 'autosave-dot' + (status === 'saving' ? ' saving' : status === 'error' ? ' error' : '');
+  lbl.textContent = msg;
+}
+
+function save(){
+  setSaveUI('saving', '保存中…');
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(function(){
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(state));
+      _lastSaved = new Date();
+      setSaveUI('ok', '自動保存済み ' + _lastSaved.toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'}));
+      saveToGithub();
+      // 旧UIも更新（あれば）
+      var ss = $('saveState'); if (ss){ ss.textContent = '自動保存 ON'; ss.className = 'pill ok'; }
+    } catch(e){
+      setSaveUI('error', '保存失敗（ストレージ確認）');
+      var ss = $('saveState'); if (ss){ ss.textContent = '保存できません'; ss.className = 'pill warn'; }
+    }
+  }, 300); // 300ms debounce
+}
+
+function load(){
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if (raw){
+      var p = JSON.parse(raw);
+      if (p && Array.isArray(p.students) && p.students.length){
+        state = p;
+        setSaveUI('ok', '前回のデータを復元しました');
+        return;
+      }
+    }
+  } catch(e){ setSaveUI('error', 'データ読み込みエラー'); }
+  var d = demoStudent();
+  state = { students: [d], currentId: d.id };
+  setSaveUI('ok', '新規データ（サンプル）');
+}
+
+// 定期バックアップ（30秒ごと）
+setInterval(function(){
+  if (state.students.length){
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e){}
+  }
+}, 30000);
+
+// ページを閉じる直前にも保存
+window.addEventListener('beforeunload', function(){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e){}
+});
+function toast(msg){
+  var t = $('toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove('on'); }, 1900);
+}
+
+/* ---------------- 画面構築 ---------------- */
+function buildStatic(){
+  // 生徒セレクト
+  var sel = $('studentSelect');
+  sel.innerHTML = state.students.map(function(s){
+    return '<option value="' + s.id + '">' + (s.name || '（名称未設定）') + '</option>';
+  }).join('');
+  sel.value = state.currentId;
+
+  // 内申マス
+  var g = $('naishinGrid'); g.innerHTML = '';
+  MAIN_SUBJECTS.concat(SUB_SUBJECTS).forEach(function(k){
+    var isSub = SUB_SUBJECTS.indexOf(k) >= 0;
+    var cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.innerHTML = '<label>' + SUBJECT_LABELS[k] + (isSub ? '<span class="sub-mark">×2</span>' : '') + '</label>' +
+      '<select data-nai="' + k + '">' + [1,2,3,4,5].map(function(v){ return '<option value="' + v + '">' + v + '</option>'; }).join('') + '</select>';
+    g.appendChild(cell);
+  });
+
+  // 当日点マス
+  var t = $('toujitsuGrid'); t.innerHTML = '';
+  MAIN_SUBJECTS.forEach(function(k){
+    var cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.innerHTML = '<label>' + SUBJECT_LABELS[k] + '</label><input type="number" min="0" max="100" step="1" data-tou="' + k + '" placeholder="0-100" />';
+    t.appendChild(cell);
+  });
+}
+
+function buildSchools(){
+  var wrap = $('schoolsWrap'); wrap.innerHTML = '';
+  var s = current(); if (!s) return;
+  s.schools.forEach(function(sc, i){
+    var card = document.createElement('div');
+    card.className = 'card';
+    card.style.margin = '0';
+    card.style.background = '#fcfcff';
+    card.innerHTML =
+      '<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">' +
+        '<div style="flex:1 1 300px">' +
+          '<label class="f">志望校 ' + (i+1) + '</label>' +
+          '<div style="display:flex;gap:6px">' +
+            '<input list="schoolList" autocomplete="off" data-school="' + i + '" data-field="name" placeholder="例）日比谷、小山台、町田総合" value="' + (sc.name || '') + '" style="flex:1" />' +
+            '<button class="school-btn" data-open-school="' + i + '">🔍 検索</button>' +
+          '</div>' +
+          '<div class="srcnote" id="schoolNote' + i + '">' + (sc.srcNote || '') + '</div>' +
+        '</div>' +
+        '<div class="verdict" id="verdict' + i + '"></div>' +
+      '</div>' +
+      '<div class="sgrid" style="margin-top:12px;grid-template-columns:repeat(auto-fill,minmax(148px,1fr))">' +
+        '<div><label class="f">合格基準点（60%ライン/1000点）</label><input type="number" step="1" data-school="' + i + '" data-field="kijun" value="' + (sc.kijun === '' ? '' : sc.kijun) + '" /></div>' +
+        '<div><label class="f">判定偏差値（60%ライン）</label><input type="number" step="0.1" data-school="' + i + '" data-field="dev" value="' + (sc.dev === '' ? '' : sc.dev) + '" /></div>' +
+        '<div><label class="f">判定幅（点）</label><input type="number" step="1" data-school="' + i + '" data-field="widthScore" value="' + sc.widthScore + '" /></div>' +
+        '<div><label class="f">判定幅（偏差値）</label><input type="number" step="0.1" data-school="' + i + '" data-field="widthDev" value="' + sc.widthDev + '" /></div>' +
+        '<div><label class="f">倍率（任意）</label><input type="number" step="0.01" data-school="' + i + '" data-field="ratio" value="' + (sc.ratio === '' ? '' : sc.ratio) + '" /></div>' +
+      '</div>' +
+      '<div id="schoolDetail' + i + '" style="margin-top:10px"></div>';
+    wrap.appendChild(card);
+  });
+}
+
+function buildMocks(){
+  var body = $('mockBody'); body.innerHTML = '';
+  var s = current(); if (!s) return;
+  s.mocks.forEach(function(m, idx){
+    var tr = document.createElement('tr');
+    var cells = '<td><input type="date" data-mock="' + m.id + '" data-field="date" value="' + (m.date || '') + '" /></td>' +
+      '<td><input type="text" data-mock="' + m.id + '" data-field="name" placeholder="Vもぎ第◯回" value="' + (m.name || '') + '" /></td>';
+    MAIN_SUBJECTS.forEach(function(k){
+      cells += '<td><input type="number" min="0" max="100" step="1" data-mock="' + m.id + '" data-sub="' + k + '" data-kind="scores" value="' + (m.scores[k] === '' ? '' : m.scores[k]) + '" /></td>';
+      cells += '<td><input type="number" min="20" max="80" step="0.1" data-mock="' + m.id + '" data-sub="' + k + '" data-kind="devs" value="' + (m.devs[k] === '' ? '' : m.devs[k]) + '" /></td>';
+    });
+    cells += '<td><input type="number" min="20" max="80" step="0.1" data-mock="' + m.id + '" data-field="dev3" value="' + (m.dev3 === '' ? '' : m.dev3) + '" /></td>';
+    cells += '<td><input type="number" min="20" max="80" step="0.1" data-mock="' + m.id + '" data-field="dev5" value="' + (m.dev5 === '' ? '' : m.dev5) + '" /></td>';
+    cells += '<td class="num" id="mockSum' + m.id + '">—</td>';
+    cells += '<td class="num" id="mockConv' + m.id + '">—</td>';
+    cells += '<td><button class="ghost-danger small" data-del="' + m.id + '">削除</button></td>';
+    tr.innerHTML = cells;
+    body.appendChild(tr);
+  });
+}
+
+/* ---------------- 反映（計算→表示） ---------------- */
+function currentToujitsuScores(s){
+  var t = {};
+  MAIN_SUBJECTS.forEach(function(k){ t[k] = s.toujitsu[k] === '' ? 0 : Number(s.toujitsu[k]); });
+  return t;
+}
+function latestMock(s){
+  if (!s.mocks.length) return null;
+  var sorted = s.mocks.slice().sort(function(a, b){ return (a.date || '') < (b.date || '') ? -1 : 1; });
+  return sorted[sorted.length - 1];
+}
+
+function refresh(){
+  var s = current(); if (!s) return;
+
+  // 基本項目
+  $('studentName').value = s.name || '';
+  $('studentMemo').value = s.memo || '';
+  document.querySelectorAll('[data-nai]').forEach(function(el){ el.value = s.naishin[el.dataset.nai] || 3; });
+  document.querySelectorAll('[data-tou]').forEach(function(el){ el.value = s.toujitsu[el.dataset.tou] || ''; });
+  $('incline').checked = !!s.incline;
+  $('autoFill').checked = !!s.autoFill;
+  $('esatjToggle').checked = !!(s.esatj && s.esatj.enabled);
+  $('esatjInput').value = (s.esatj && s.esatj.score) || 0;
+  $('esatjBox').style.display = (s.esatj && s.esatj.enabled) ? 'block' : 'none';
+  $('esatjOffNote').style.display = (s.esatj && s.esatj.enabled) ? 'none' : 'block';
+
+  var nai = calcNaishin(s.naishin);
+  var tou = calcToujitsu(currentToujitsuScores(s), s.incline);
+  var esatj = (s.esatj && s.esatj.enabled) ? Number(s.esatj.score || 0) : 0;
+  var total = calcTotal(nai.shinsho, tou.score700, esatj);
+  var totalMax = (s.esatj && s.esatj.enabled) ? 1020 : 1000;
+
+  $('outNaishin65').textContent = nai.naishin65;
+  $('outShinsho').textContent = fmt(nai.shinsho);
+  $('outTotal5').textContent = tou.total5;
+  $('outToujitsu').textContent = fmt(tou.score700);
+
+  $('sumShinsho').textContent = fmt(nai.shinsho);
+  $('sumToujitsu').textContent = fmt(tou.score700);
+  $('rowEsatj').style.display = esatj ? 'flex' : 'none';
+  $('sumEsatj').textContent = fmt(esatj, 0);
+  $('sumTotal').textContent = fmt(total);
+  $('sumMax').textContent = '/ ' + totalMax;
+
+  // 模試行の合計・換算
+  s.mocks.forEach(function(m){
+    var sum = 0, any = false;
+    MAIN_SUBJECTS.forEach(function(k){ if (m.scores[k] !== '' && m.scores[k] != null){ sum += Number(m.scores[k]); any = true; } });
+    var el1 = $('mockSum' + m.id), el2 = $('mockConv' + m.id);
+    if (el1) el1.textContent = any ? sum : '—';
+    var factor = vmogiFactor(m.date);
+    if (el2) el2.textContent = any ? fmt(nai.shinsho + sum * factor * 1.4) : '—';
+  });
+
+  // 志望校判定
+  var lm = latestMock(s);
+  var latestDev5 = lm && lm.dev5 !== '' ? Number(lm.dev5) : null;
+  s.schools.forEach(function(sc, i){
+    var box = $('verdict' + i), det = $('schoolDetail' + i);
+    if (!box || !det) return;
+    var hasK = sc.kijun !== '' && sc.kijun != null;
+    var diff = hasK ? Math.round((total - Number(sc.kijun)) * 10) / 10 : null;
+    var rank = hasK ? judgeRank(diff, sc.widthScore) : null;
+    var info = rank ? RANK_INFO[rank] : null;
+
+    box.innerHTML =
+      '<div class="vl ' + (rank || 'na') + '">' + (rank || '未設定') + '</div>' +
+      '<div><div style="font-weight:700;font-size:15px">' + (info ? '合格可能性 ' + info.prob : '基準点を入力してください') + '</div>' +
+      '<div class="small muted">' + (info ? info.note : 'Vもぎ合格めやす表から転記') + '</div>' +
+      (diff !== null ? '<div class="small" style="color:' + (diff >= 0 ? '#0e9f6e' : '#d9534f') + '">基準点との差 ' + (diff >= 0 ? '+' : '') + fmt(diff) + '点</div>' : '') +
+      '</div>';
+
+    var devHTML = '';
+    if (sc.dev !== '' && sc.dev != null && latestDev5 !== null){
+      var ddiff = Math.round((latestDev5 - Number(sc.dev)) * 10) / 10;
+      var drank = judgeRank(ddiff, sc.widthDev);
+      devHTML = '<span class="pill">偏差値判定 <b>' + drank + '</b></span> ' +
+        '<span class="small muted">模試5科偏差値 ' + fmt(latestDev5) + ' ／ 判定偏差値 ' + fmt(sc.dev) + '（差 ' + (ddiff >= 0 ? '+' : '') + fmt(ddiff) + '）</span>';
+    } else {
+      devHTML = '<span class="small muted">模試の5科偏差値と判定偏差値を入力すると偏差値側の判定も表示されます。</span>';
+    }
+    var need = '';
+    if (diff !== null){
+      need = diff >= 0
+        ? '<span class="pill ok">合格基準点を ' + fmt(diff) + '点 上回っています</span>'
+        : '<span class="pill warn">合格基準点まで あと ' + fmt(Math.abs(diff)) + '点</span>';
+    }
+    var prob = (diff !== null) ? estimateProb(diff, sc.widthScore) : null;
+    var need = '';
+    if (diff !== null){
+      if (diff >= 0){
+        need = '<span class="pill ok">合格基準点を ' + fmt(diff) + '点 上回っています</span>';
+      } else {
+        var need5 = Math.round((Math.abs(diff) / 1.4) * 10) / 10;
+        need = '<span class="pill warn">合格基準点まで あと ' + fmt(Math.abs(diff)) + '点（当日5科で ' + fmt(need5) + '点／1教科あたり約' + fmt(need5 / 5) + '点）</span>';
+      }
+    }
+    var probHTML = (prob !== null)
+      ? '<div><span class="small muted">合格可能性の目安 </span><b style="font-size:15px">約 ' + prob + '%</b>' +
+        '<div class="probbar"><i style="width:' + prob + '%"></i></div>' +
+        '<div class="small muted">基準点＝60%ラインのため、基準点ちょうどで60%。判定幅で上下させた簡易推定値です。</div></div>'
+      : '';
+    var noteHTML = sc.srcNote ? '<div class="srcnote">' + esc(sc.srcNote) + '</div>' : '';
+    var candHTML = sc.candNote ? '<div class="cand">' + esc(sc.candNote) + '</div>' : '';
+    det.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">' + devHTML + need +
+      (sc.ratio ? ' <span class="small muted">倍率 ' + sc.ratio + '倍</span>' : '') + '</div>' +
+      probHTML + candHTML + noteHTML;
+  });
+
+  renderCharts();
+}
+
+/* ---------------- グラフ（Canvas・外部ライブラリ不要） ---------------- */
+function drawChart(canvas, cfg){
+  if (!canvas) return;
+  var dpr = window.devicePixelRatio || 1;
+  var w = canvas.clientWidth || 600, h = canvas.clientHeight || 250;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  var ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+
+  var padL = 48, padR = 14, padT = 14, padB = 40;
+  var pw = w - padL - padR, ph = h - padT - padB;
+  var labels = cfg.labels || [], series = cfg.series || [], refs = cfg.refs || [];
+  // ツールチップ用にメタデータをcanvasに保存
+  canvas._chartData = { labels: labels, series: series, refs: cfg.refs || [], padL: padL, padR: padR };
+
+  var vals = [];
+  series.forEach(function(se){ se.values.forEach(function(v){ if (v != null && isFinite(v)) vals.push(v); }); });
+  refs.forEach(function(r){ if (isFinite(r.value)) vals.push(r.value); });
+
+  ctx.font = '11px system-ui, "Hiragino Sans", sans-serif';
+  if (!vals.length){
+    ctx.fillStyle = '#9aa0b0'; ctx.textAlign = 'center';
+    ctx.fillText('模試を追加するとグラフが表示されます', w / 2, h / 2);
+    return;
+  }
+  var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  if (min === max){ min -= 2; max += 2; }
+  var pad = (max - min) * 0.14; min -= pad; max += pad;
+
+  function X(i){ return labels.length <= 1 ? padL + pw / 2 : padL + pw * (i / (labels.length - 1)); }
+  function Y(v){ return padT + ph - (v - min) / (max - min) * ph; }
+
+  // グリッド + Y軸
+  ctx.strokeStyle = '#eef0f7'; ctx.lineWidth = 1; ctx.fillStyle = '#9aa0b0'; ctx.textAlign = 'right';
+  for (var i = 0; i <= 4; i++){
+    var v = min + (max - min) * (i / 4);
+    var y = Y(v);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
+    ctx.fillText(Math.round(v * 10) / 10, padL - 8, y + 4);
+  }
+  // 基準線（志望校の合格基準点）
+  refs.forEach(function(r){
+    if (!isFinite(r.value)) return;
+    var y = Y(r.value);
+    ctx.save();
+    ctx.setLineDash([6, 4]); ctx.strokeStyle = r.color || '#b9c0d6'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
+    ctx.restore();
+  });
+  // データ線
+  series.forEach(function(se){
+    ctx.strokeStyle = se.color; ctx.lineWidth = 2.2; ctx.beginPath();
+    var started = false;
+    se.values.forEach(function(v, i){
+      if (v == null || !isFinite(v)){ started = false; return; }
+      var x = X(i), y = Y(v);
+      if (!started){ ctx.moveTo(x, y); started = true; } else { ctx.lineTo(x, y); }
+    });
+    ctx.stroke();
+    se.values.forEach(function(v, i){
+      if (v == null || !isFinite(v)) return;
+      var x = X(i), y = Y(v);
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 3.6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = se.color; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 3.6, 0, Math.PI * 2); ctx.stroke();
+      if (se.showValues !== false && labels.length <= 12){
+        ctx.fillStyle = se.color; ctx.textAlign = 'center';
+        ctx.fillText(Math.round(v * 10) / 10, x, y - 8);
+      }
+    });
+  });
+  // X軸ラベル
+  ctx.fillStyle = '#7b8296'; ctx.textAlign = 'center';
+  labels.forEach(function(lb, i){
+    var x = X(i);
+    var txt = String(lb || '');
+    if (txt.length > 9) txt = txt.slice(0, 9) + '…';
+    ctx.fillText(txt, x, h - 22);
+  });
+  if (cfg.xTitle){ ctx.fillStyle = '#9aa0b0'; ctx.fillText(cfg.xTitle, w / 2, h - 6); }
+}
+
+/* ---- グラフツールチップ ---- */
+var _tip = null;
+function getTip(){
+  if (!_tip){
+    _tip = document.createElement('div');
+    _tip.style.cssText = 'position:fixed;pointer-events:none;z-index:200;display:none;' +
+      'background:#1e2235;color:#fff;border-radius:12px;padding:10px 14px;' +
+      'font-size:12.5px;line-height:1.75;box-shadow:0 6px 24px rgba(0,0,0,.3);' +
+      'max-width:240px;white-space:nowrap';
+    document.body.appendChild(_tip);
+  }
+  return _tip;
+}
+function onChartMove(e){
+  var canvas = e.target;
+  var d = canvas._chartData;
+  if (!d || !d.labels || !d.labels.length){ getTip().style.display='none'; return; }
+  var rect = canvas.getBoundingClientRect();
+  var mx = e.clientX - rect.left;
+  var padL = d.padL, pw = canvas.clientWidth - padL - d.padR;
+  var n = d.labels.length;
+  var nearIdx = -1, nearDist = Infinity;
+  for (var i = 0; i < n; i++){
+    var x = (n <= 1) ? (padL + pw / 2) : (padL + pw * (i / (n - 1)));
+    var dist = Math.abs(mx - x);
+    if (dist < nearDist){ nearDist = dist; nearIdx = i; }
+  }
+  var threshold = (n <= 1) ? 40 : pw / (n - 1) * 0.6;
+  if (nearIdx < 0 || nearDist > threshold){ getTip().style.display='none'; return; }
+  var label = d.labels[nearIdx] || ('第' + (nearIdx + 1) + '回');
+  var html = '<b style="font-size:13px">' + label + '</b>';
+  d.series.forEach(function(se){
+    var v = se.values[nearIdx];
+    if (v != null && isFinite(v)){
+      html += '<br><span style="color:' + se.color + '">●</span> ' + se.label + '：<b>' + (Math.round(v * 10) / 10) + '</b>';
+    }
+  });
+  if (d.refs && d.refs.length){
+    html += '<hr style="border:none;border-top:1px solid rgba(255,255,255,.2);margin:6px 0 4px">';
+    d.refs.forEach(function(r){
+      if (r.label && isFinite(r.value)){
+        var val = d.series[0] && d.series[0].values[nearIdx] != null ? (d.series[0].values[nearIdx] - r.value) : null;
+        var diff = val != null ? ('　差 ' + (val >= 0 ? '+' : '') + Math.round(val * 10) / 10) : '';
+        html += '<br><span style="color:' + r.color + '">- -</span> ' + r.label + '：' + r.value + diff;
+      }
+    });
+  }
+  var tip = getTip();
+  tip.innerHTML = html;
+  tip.style.display = 'block';
+  var tx = e.clientX + 18, ty = e.clientY - 16;
+  if (tx + 250 > window.innerWidth) tx = e.clientX - 258;
+  if (ty < 8) ty = 8;
+  tip.style.left = tx + 'px'; tip.style.top = ty + 'px';
+}
+function attachChartTooltips(){
+  ['chartScores','chartDevs','chartTotal','chartDev57'].forEach(function(id){
+    var c = $(id); if (!c) return;
+    c.addEventListener('mousemove', onChartMove);
+    c.addEventListener('mouseleave', function(){ getTip().style.display='none'; });
+  });
+}
+
+function legend(el, items){
+  if (!el) return;
+  el.innerHTML = items.map(function(it){
+    return '<span><i style="background:' + it.color + (it.dash ? ';opacity:.6' : '') + '"></i>' + it.label + '</span>';
+  }).join('');
+}
+
+function renderCharts(){
+  var s = current(); if (!s) return;
+  var sorted = s.mocks.slice().sort(function(a, b){ return (a.date || '') < (b.date || '') ? -1 : 1; });
+  var labels = sorted.map(function(m, i){
+    if (m.name) return m.name;
+    return m.date ? m.date.slice(5) : ('第' + (i + 1) + '回');
+  });
+  var nai = calcNaishin(s.naishin);
+
+  var scoreSeries = MAIN_SUBJECTS.map(function(k){
+    return { label: SUBJECT_LABELS[k], color: SUBJECT_COLORS[k],
+      values: sorted.map(function(m){ return m.scores[k] === '' ? null : Number(m.scores[k]); }) };
+  });
+  var devSeries = MAIN_SUBJECTS.map(function(k){
+    return { label: SUBJECT_LABELS[k], color: SUBJECT_COLORS[k],
+      values: sorted.map(function(m){ return m.devs[k] === '' ? null : Number(m.devs[k]); }) };
+  });
+  var convSeries = [{ label:'換算総合得点（本番予想）', color:'#4f6df5',
+    values: sorted.map(function(m){
+      var sum = 0, any = false;
+      MAIN_SUBJECTS.forEach(function(k){ if (m.scores[k] !== '' && m.scores[k] != null){ sum += Number(m.scores[k]); any = true; } });
+      return any ? nai.shinsho + sum * vmogiFactor(m.date) * 1.4 : null;
+    }) }];
+  var refs = s.schools.filter(function(sc){ return sc.kijun !== '' && sc.kijun != null; }).map(function(sc, i){
+    return { label: sc.name || ('志望校' + (i + 1)), value: Number(sc.kijun), color: ['#0e9f6e','#d9a300','#e05c8a'][i] || '#b9c0d6' };
+  });
+  var dev57 = [
+    { label:'5科偏差値', color:'#7c5cf0', values: sorted.map(function(m){ return m.dev5 === '' ? null : Number(m.dev5); }) },
+    { label:'3科偏差値', color:'#0e9f6e', values: sorted.map(function(m){ return m.dev3 === '' ? null : Number(m.dev3); }) }
+  ];
+
+  drawChart($('chartScores'), { labels: labels, series: scoreSeries });
+  drawChart($('chartDevs'), { labels: labels, series: devSeries });
+  drawChart($('chartTotal'), { labels: labels, series: convSeries, refs: refs });
+  drawChart($('chartDev57'), { labels: labels, series: dev57 });
+
+  legend($('legendScores'), MAIN_SUBJECTS.map(function(k){ return { label: SUBJECT_LABELS[k], color: SUBJECT_COLORS[k] }; }));
+  legend($('legendDevs'), MAIN_SUBJECTS.map(function(k){ return { label: SUBJECT_LABELS[k], color: SUBJECT_COLORS[k] }; }));
+  legend($('legendTotal'), [{ label:'換算総合得点', color:'#4f6df5' }].concat(
+    s.schools.filter(function(sc){ return sc.name && sc.kijun !== '' && sc.kijun != null; })
+      .map(function(sc, i){ return { label: sc.name + '（基準点 ' + sc.kijun + '）', color: ['#0e9f6e','#d9a300','#e05c8a'][i] || '#b9c0d6', dash:true }; })));
+  legend($('legendDev57'), [{ label:'5科偏差値', color:'#7c5cf0' }, { label:'3科偏差値', color:'#0e9f6e' }]);
+}
+
+/* ---------------- イベント ---------------- */
+function bind(){
+  $('studentSelect').addEventListener('change', function(e){ state.currentId = e.target.value; save(); buildSchools(); buildMocks(); refresh(); });
+
+  $('btnNew').addEventListener('click', function(){
+    var s = newStudent('新しい生徒');
+    state.students.push(s); state.currentId = s.id; save(); buildStatic(); buildSchools(); buildMocks(); refresh(); toast('新しい生徒を追加しました');
+  });
+  $('btnDup').addEventListener('click', function(){
+    var s = current(); if (!s) return;
+    var c = JSON.parse(JSON.stringify(s));
+    c.id = uid(); c.name = (s.name || '生徒') + '（コピー）';
+    c.mocks.forEach(function(m){ m.id = uid(); });
+    state.students.push(c); state.currentId = c.id; save(); buildStatic(); buildSchools(); buildMocks(); refresh(); toast('複製しました');
+  });
+  $('btnDel').addEventListener('click', function(){
+    var s = current(); if (!s) return;
+    if (!confirm('「' + (s.name || 'この生徒') + '」のデータを削除しますか？')) return;
+    state.students = state.students.filter(function(x){ return x.id !== s.id; });
+    if (!state.students.length) state.students.push(newStudent('新しい生徒'));
+    state.currentId = state.students[0].id;
+    save(); buildStatic(); buildSchools(); buildMocks(); refresh(); toast('削除しました');
+  });
+  $('btnExport').addEventListener('click', function(){
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
+    var a = document.createElement('a');
+    var d = new Date().toISOString().slice(0, 10);
+    a.href = URL.createObjectURL(blob);
+    a.download = 'toritsu-shinroi-' + d + '.json';
+    a.click(); URL.revokeObjectURL(a.href); toast('JSONを書き出しました');
+  });
+  $('btnImport').addEventListener('click', function(){ $('importFile').click(); });
+  $('importFile').addEventListener('change', function(e){
+    var f = e.target.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function(){
+      try {
+        var p = JSON.parse(r.result);
+        if (!p || !Array.isArray(p.students)) throw new Error('形式が違います');
+        state = p;
+        if (!state.currentId || !state.students.some(function(x){ return x.id === state.currentId; })) state.currentId = state.students[0].id;
+        save(); buildStatic(); buildSchools(); buildMocks(); refresh(); toast('読み込みました');
+      } catch(err){ alert('読み込めませんでした：' + err.message); }
+    };
+    r.readAsText(f); e.target.value = '';
+  });
+
+  $('studentName').addEventListener('input', function(e){
+    var s = current(); s.name = e.target.value; save();
+    var sel = $('studentSelect');
+    var opt = Array.prototype.find.call(sel.options, function(o){ return o.value === s.id; });
+    if (opt) opt.textContent = s.name || '（名称未設定）';
+  });
+  $('studentMemo').addEventListener('input', function(e){ current().memo = e.target.value; save(); });
+
+  document.addEventListener('input', function(e){
+    var s = current(); if (!s) return;
+    var el = e.target;
+    if (el.dataset && el.dataset.nai){ s.naishin[el.dataset.nai] = Number(el.value); save(); refresh(); return; }
+    if (el.dataset && el.dataset.tou){ s.toujitsu[el.dataset.tou] = el.value === '' ? '' : Number(el.value); save(); refresh(); return; }
+    if (el.dataset && el.dataset.school !== undefined){
+      var i = Number(el.dataset.school), field = el.dataset.field;
+      s.schools[i][field] = (field === 'name') ? el.value : (el.value === '' ? '' : Number(el.value));
+      save(); refresh(); return;
+    }
+    if (el.dataset && el.dataset.mock){
+      var m = s.mocks.find(function(x){ return x.id === el.dataset.mock; }); if (!m) return;
+      if (el.dataset.kind){ m[el.dataset.kind][el.dataset.sub] = el.value === '' ? '' : Number(el.value); }
+      else { m[el.dataset.field] = el.value === '' ? '' : (el.dataset.field === 'date' || el.dataset.field === 'name' ? el.value : Number(el.value)); }
+      save(); refresh(); return;
+    }
+  });
+
+  $('incline').addEventListener('change', function(e){ current().incline = e.target.checked; save(); refresh(); });
+  $('autoFill').addEventListener('change', function(e){
+    var s = current(); s.autoFill = e.target.checked; save();
+    if (s.autoFill) applyLatestMock(false);
+    refresh();
+  });
+  $('btnUseMock').addEventListener('click', function(){ applyLatestMock(true); });
+  $('esatjToggle').addEventListener('change', function(e){
+    var s = current(); s.esatj.enabled = e.target.checked; save(); refresh();
+  });
+  $('esatjInput').addEventListener('input', function(e){
+    var s = current(); s.esatj.score = Math.max(0, Math.min(20, Number(e.target.value || 0))); save(); refresh();
+  });
+
+  $('btnAddMock').addEventListener('click', function(){
+    var s = current();
+    var m = blankMock();
+    var sortedDates = s.mocks.map(function(x){ return x.date; }).filter(Boolean).sort();
+    m.date = new Date().toISOString().slice(0, 10);
+    m.name = 'Vもぎ 第' + (s.mocks.length + 1) + '回';
+    s.mocks.push(m); save(); buildMocks(); refresh(); toast('模試を追加しました');
+  });
+
+  $('mockBody').addEventListener('click', function(e){
+    if (e.target.dataset && e.target.dataset.del){
+      var s = current();
+      s.mocks = s.mocks.filter(function(x){ return x.id !== e.target.dataset.del; });
+      save(); buildMocks(); refresh(); toast('模試を削除しました');
+    }
+  });
+
+  // 学校検索ボタン（動的に生成されるため委譲）
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('[data-open-school]') : null;
+    if (btn) { openSchoolModal(Number(btn.dataset.openSchool)); return; }
+    var item = e.target.closest ? e.target.closest('.school-item') : null;
+    if (item && !$('schoolModal').hidden){ selectSchoolFromModal(item.dataset.schoolFull, Number(item.dataset.schoolDbIdx)); return; }
+  });
+  $('schoolModalClose').addEventListener('click', closeSchoolModal);
+  $('schoolModal').addEventListener('click', function(e){ if (e.target.id === 'schoolModal') closeSchoolModal(); });
+  $('schoolSearchInput').addEventListener('input', renderSchoolList);
+  $('schoolAreaFilter').addEventListener('change', renderSchoolList);
+
+  $('btnRoster').addEventListener('click', openRoster);
+  $('rosterClose').addEventListener('click', closeRoster);
+  $('rosterModal').addEventListener('click', function(e){ if (e.target.id === 'rosterModal') closeRoster(); });
+  $('rosterSearch').addEventListener('input', renderRoster);
+  $('rosterList').addEventListener('click', function(e){
+    var item = e.target.closest ? e.target.closest('.roster-item') : null;
+    if (item && item.dataset.sid) goToStudent(item.dataset.sid);
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeRoster(); });
+
+  document.addEventListener('change', function(e){
+    var el = e.target;
+    if (el.dataset && el.dataset.school !== undefined && el.dataset.field === 'name'){
+      var schoolIdx = Number(el.dataset.school);
+      applySchoolLookup(schoolIdx, el.value, true);
+      save();
+      // kijun・devをDOM直接書き込み（buildSchools()は全再描画になるので入力欄にピンポイントで反映）
+      var s2 = current(); var sc2 = s2.schools[schoolIdx];
+      var kEl = document.querySelector('[data-school="' + schoolIdx + '"][data-field="kijun"]');
+      var dEl = document.querySelector('[data-school="' + schoolIdx + '"][data-field="dev"]');
+      if (kEl && sc2.kijun !== '' && sc2.kijun != null) kEl.value = sc2.kijun;
+      if (dEl && sc2.dev !== '' && sc2.dev != null) dEl.value = sc2.dev;
+      var nt = $('schoolNote' + schoolIdx);
+      if (nt) nt.textContent = sc2.srcNote || '';
+      refresh();
+    }
+  });
+
+  var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(renderCharts, 160); });
+
+  // Gist同期モーダル
+  $('btnSync').addEventListener('click', function(){
+    var gs = getSyncSettings();
+    $('syncPat').value = gs.pat || '';
+    if ($('syncRepo')) $('syncRepo').value = gs.repo || SYNC_REPO;
+    if ($('syncBranch')) $('syncBranch').value = gs.branch || SYNC_BRANCH;
+    $('syncModalMsg').textContent = gs.pat ? '✓ 設定済み（' + (gs.repo || SYNC_REPO) + '）' : '未設定';
+    $('syncModal').hidden = false;
+  });
+  $('syncModalClose').addEventListener('click', function(){ $('syncModal').hidden = true; });
+  $('syncModal').addEventListener('click', function(e){ if (e.target.id === 'syncModal') $('syncModal').hidden = true; });
+  $('syncSaveBtn').addEventListener('click', function(){
+    var pat = $('syncPat').value.trim();
+    var repo = $('syncRepo').value.trim();
+    var branch = $('syncBranch').value.trim();
+    if (!pat){ $('syncModalMsg').textContent = 'PATを入力してください'; return; }
+    setSyncSettings({ pat: pat, repo: repo || SYNC_REPO, branch: branch || SYNC_BRANCH });
+    $('syncModalMsg').textContent = '保存しました。次の自動保存からGitHubに同期されます。';
+    setSyncUI('ok', '☁ 設定済み');
+  });
+  $('syncPullBtn').addEventListener('click', function(){
+    $('syncModalMsg').textContent = 'GitHubから取得中…';
+    pullFromGithub(function(ok){
+      if (ok){
+        $('syncModalMsg').textContent = 'GitHubからデータを取得しました！';
+        $('syncModal').hidden = true;
+        buildStatic(); buildSchoolList(); buildSchoolModalUI(); updateRoster(); buildSchools(); buildMocks(); refresh();
+        toast('GitHubからデータを取得しました');
+        setTimeout(renderCharts, 100);
+      } else {
+        $('syncModalMsg').textContent = 'GitHubからの取得に失敗しました。PATとリポジトリを確認してください。';
+      }
+    });
+  });
+  $('syncClearBtn').addEventListener('click', function(){
+    if (!confirm('GitHub同期設定を削除しますか？')) return;
+    try { localStorage.removeItem(SYNC_KEY); } catch(e){}
+    $('syncPat').value = ''; 
+    $('syncModalMsg').textContent = '設定を削除しました';
+    setSyncUI('', '');
+  });
+}
+
+function applyLatestMock(notify){
+  var s = current(); var lm = latestMock(s);
+  if (!lm){ if (notify) toast('模試の記録がまだありません'); return; }
+  var any = false;
+  MAIN_SUBJECTS.forEach(function(k){ if (lm.scores[k] !== '' && lm.scores[k] != null){ s.toujitsu[k] = Number(lm.scores[k]); any = true; } });
+  if (any){ save(); refresh(); if (notify) toast('最新の模試（' + (lm.name || lm.date || '') + '）の点数を反映しました'); }
+  else if (notify) toast('最新の模試に点数が入力されていません');
+}
+
+/* ---------------- 学校検索モーダル ---------------- */
+var _schoolModalTarget = 0;
+
+function buildSchoolModalUI(){
+  // エリアフィルター
+  var areas = [];
+  SCHOOL_DB.forEach(function(d){ if (areas.indexOf(d.area) < 0) areas.push(d.area); });
+  var sel = $('schoolAreaFilter');
+  sel.innerHTML = '<option value="">全エリア</option>' +
+    areas.map(function(a){ return '<option value="' + esc(a) + '">' + esc(a) + '</option>'; }).join('');
+
+  // タブ（偏差値帯）
+  var tabs = [
+    { label: '全校', min: 0, max: 99 },
+    { label: '70〜', min: 70, max: 99 },
+    { label: '65〜69', min: 65, max: 69 },
+    { label: '60〜64', min: 60, max: 64 },
+    { label: '55〜59', min: 55, max: 59 },
+    { label: '50〜54', min: 50, max: 54 },
+    { label: '45〜49', min: 45, max: 49 },
+    { label: '〜44', min: 0, max: 44 }
+  ];
+  var tabBox = $('schoolTabs'); tabBox.innerHTML = '';
+  tabs.forEach(function(t, i){
+    var btn = document.createElement('button');
+    btn.className = 'school-tab' + (i === 0 ? ' on' : '');
+    btn.textContent = t.label;
+    btn.dataset.devMin = t.min;
+    btn.dataset.devMax = t.max;
+    btn.addEventListener('click', function(){
+      tabBox.querySelectorAll('.school-tab').forEach(function(b){ b.classList.remove('on'); });
+      btn.classList.add('on');
+      renderSchoolList();
+    });
+    tabBox.appendChild(btn);
+  });
+}
+
+function renderSchoolList(){
+  var q = String($('schoolSearchInput').value || '').trim().toLowerCase();
+  var area = $('schoolAreaFilter').value;
+  var activeTab = $('schoolTabs').querySelector('.school-tab.on');
+  var devMin = activeTab ? Number(activeTab.dataset.devMin) : 0;
+  var devMax = activeTab ? Number(activeTab.dataset.devMax) : 99;
+
+  var list = SCHOOL_DB.filter(function(d){
+    if (area && d.area !== area) return false;
+    if (d.dev < devMin || d.dev > devMax) return false;
+    if (q) {
+      var name = normSchool(d.full).toLowerCase();
+      var orig = String(d.full).toLowerCase();
+      return name.indexOf(q) >= 0 || orig.indexOf(q) >= 0;
+    }
+    return true;
+  });
+
+  var box = $('schoolList2');
+  if (!list.length){
+    box.innerHTML = '<p class="small muted" style="padding:12px 4px">該当する学校が見つかりませんでした。</p>';
+    return;
+  }
+  box.innerHTML = list.map(function(d){
+    var dbIdx = SCHOOL_DB.indexOf(d);
+    var meta = '偏差値 ' + d.dev + (d.total != null ? '　合格基準点 ' + d.total + '点' : '　基準点データなし');
+    if (d.naishin) meta += '　内申めやす ' + d.naishin;
+    meta += '　[' + d.area + ']';
+    return '<div class="school-item" data-school-full="' + esc(d.full) + '" data-school-db-idx="' + dbIdx + '">' +
+      '<div><div class="school-item-name">' + esc(d.full) + '</div>' +
+      '<div class="school-item-meta">' + esc(meta) + '</div></div>' +
+      '<button class="primary small" style="flex:0 0 auto">選択</button>' +
+      '</div>';
+  }).join('');
+}
+
+function openSchoolModal(targetIdx){
+  _schoolModalTarget = targetIdx;
+  $('schoolSearchInput').value = '';
+  $('schoolAreaFilter').value = '';
+  $('schoolTabs').querySelectorAll('.school-tab').forEach(function(b, i){ b.classList.toggle('on', i === 0); });
+  renderSchoolList();
+  $('schoolModal').hidden = false;
+  setTimeout(function(){ $('schoolSearchInput').focus(); }, 60);
+}
+
+function closeSchoolModal(){ $('schoolModal').hidden = true; }
+
+function selectSchoolFromModal(fullName, dbIdx){
+  var s = current(); if (!s) return;
+  var sc = s.schools[_schoolModalTarget];
+  // DBレコードを直接取得（再検索不要）
+  var hit = (dbIdx !== undefined && dbIdx >= 0 && dbIdx < SCHOOL_DB.length) ? SCHOOL_DB[dbIdx] : null;
+  if (!hit){
+    // フォールバック：完全一致で検索
+    for (var k = 0; k < SCHOOL_DB.length; k++){
+      if (SCHOOL_DB[k].full === fullName){ hit = SCHOOL_DB[k]; break; }
+    }
+  }
+  if (hit){
+    sc.name = hit.full;
+    sc.dev = hit.dev;
+    sc.kijun = (hit.total == null) ? '' : hit.total;
+    sc.naishinRef = hit.naishin;
+    sc.dev80 = hit.dev80;
+    sc.area = hit.area;
+    sc.src = hit.src;
+    sc.srcNote = buildSrcNote(hit);
+    sc.candNote = '';
+    sc.auto = true;
+  } else {
+    sc.name = fullName;
+  }
+  save();
+  buildSchools();
+  // 念のためDOM直接書き込みでも確実に表示
+  var kEl = document.querySelector('[data-school="' + _schoolModalTarget + '"][data-field="kijun"]');
+  var dEl = document.querySelector('[data-school="' + _schoolModalTarget + '"][data-field="dev"]');
+  if (kEl && sc.kijun !== '' && sc.kijun != null) kEl.value = sc.kijun;
+  if (dEl && sc.dev !== '' && sc.dev != null) dEl.value = sc.dev;
+  refresh();
+  closeSchoolModal();
+  toast(fullName + ' を選択しました');
+}
+
+/* ---------------- 起動 ---------------- */
+load();
+buildStatic();
+buildSchoolList();
+buildSchoolModalUI();
+updateRoster();
+buildSchools();
+buildMocks();
+// 自動反映の初期動作
+(function(){ var s = current(); if (s && s.autoFill) applyLatestMock(false); })();
+refresh();
+bind();
+// 起動時にGistから最新データを取得（設定済みの場合）
+(function(){
+  var _gs = getSyncSettings();
+  if (!_gs.pat) return;
+  pullFromGithub(function(ok){
+    if (ok){
+      buildStatic(); buildSchoolList(); buildSchoolModalUI(); updateRoster(); buildSchools(); buildMocks(); refresh();
+      toast('GitHubからデータを取得しました');
+      setTimeout(function(){ renderCharts(); attachChartTooltips(); }, 100);
+    }
+  });
+})();
+window.addEventListener('load', function(){ setTimeout(function(){ renderCharts(); attachChartTooltips(); }, 60); });
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
+
+<!-- Gist同期モーダル -->
+<div class="modal-backdrop" id="syncModal" hidden>
+  <div class="modal-box" style="max-width:440px">
+    <button class="modal-close" id="syncModalClose">✕</button>
+    <h3 style="margin:0 0 14px">☁ GitHub 同期設定</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 14px">生徒データをGitHubリポジトリに保存し、PCとスマホどちらからでも同じデータで使えます（repo権限のPATが必要）。</p>
+    <label class="f">Personal Access Token（repo権限が必要）</label>
+    <input type="password" id="syncPat" placeholder="ghp_xxxx..." style="width:100%;box-sizing:border-box;margin-bottom:10px" autocomplete="off" />
+    <label class="f">リポジトリ（owner/repo）</label>
+    <input type="text" id="syncRepo" value="yutotakeuchi5m-jpg/-" style="width:100%;box-sizing:border-box;margin-bottom:10px" />
+    <label class="f">ブランチ</label>
+    <input type="text" id="syncBranch" value="main" style="width:100%;box-sizing:border-box;margin-bottom:14px" />
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="primary" id="syncSaveBtn">設定を保存</button>
+      <button class="ghost" id="syncPullBtn">↓ Gistから最新データを取得</button>
+      <button class="ghost-danger" id="syncClearBtn">設定を削除</button>
+    </div>
+    <div id="syncModalMsg" style="font-size:13px;margin-top:12px;min-height:20px"></div>
+  </div>
+</div>
+</body>
+</html>
