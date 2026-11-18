@@ -754,6 +754,21 @@ function getSyncSettings(){
 function setSyncSettings(obj){
   try { localStorage.setItem(SYNC_KEY, JSON.stringify(obj)); } catch(e){}
 }
+// URLハッシュから自動設定（例: simulator.html#s=ghp_xxx または #s=ghp_xxx&r=owner/repo&b=main）
+(function(){
+  try {
+    var h = location.hash.slice(1);
+    if (!h) return;
+    var params = {};
+    h.split('&').forEach(function(p){ var kv = p.split('='); if(kv.length===2) params[kv[0]] = decodeURIComponent(kv[1]); });
+    if (params.s) {
+      var cfg = { pat: params.s, repo: params.r || SYNC_REPO, branch: params.b || SYNC_BRANCH };
+      setSyncSettings(cfg);
+      history.replaceState(null, '', location.pathname + location.search); // ハッシュをURLから消す
+      console.log('[sync] URLハッシュから設定を自動適用しました');
+    }
+  } catch(e){}
+})();
 function setSyncUI(status, msg){
   var el = $('syncStatus');
   if (!el) return;
@@ -1529,9 +1544,22 @@ function bind(){
   $('syncClearBtn').addEventListener('click', function(){
     if (!confirm('GitHub同期設定を削除しますか？')) return;
     try { localStorage.removeItem(SYNC_KEY); } catch(e){}
-    $('syncPat').value = ''; 
+    $('syncPat').value = '';
     $('syncModalMsg').textContent = '設定を削除しました';
     setSyncUI('', '');
+  });
+  $('syncGenLink').addEventListener('click', function(){
+    var pat = $('syncPat').value.trim() || getSyncSettings().pat;
+    var repo = ($('syncRepo') && $('syncRepo').value.trim()) || getSyncSettings().repo || SYNC_REPO;
+    var branch = ($('syncBranch') && $('syncBranch').value.trim()) || getSyncSettings().branch || SYNC_BRANCH;
+    if (!pat){ $('syncLinkOut').textContent = '先にPATを入力してください'; return; }
+    var base = location.href.split('#')[0];
+    var link = base + '#s=' + encodeURIComponent(pat) + '&r=' + encodeURIComponent(repo) + '&b=' + encodeURIComponent(branch);
+    navigator.clipboard.writeText(link).then(function(){
+      $('syncLinkOut').textContent = '✓ コピー済み！ブックマークに登録してください。';
+    }).catch(function(){
+      $('syncLinkOut').textContent = link;
+    });
   });
 }
 
@@ -1709,9 +1737,14 @@ window.addEventListener('load', function(){ setTimeout(function(){ renderCharts(
     <input type="text" id="syncBranch" value="main" style="width:100%;box-sizing:border-box;margin-bottom:14px" />
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="primary" id="syncSaveBtn">設定を保存</button>
-      <button class="ghost" id="syncPullBtn">↓ Gistから最新データを取得</button>
+      <button class="ghost" id="syncPullBtn">↓ GitHubから最新データを取得</button>
       <button class="ghost-danger" id="syncClearBtn">設定を削除</button>
     </div>
+    <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)" />
+    <div style="font-size:13px;font-weight:600;margin-bottom:6px">📎 セットアップリンク（他のPCで使う用）</div>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 8px">このリンクをブックマークに登録すると、どのPCで開いても自動で同期設定が入ります。</p>
+    <button class="ghost" id="syncGenLink" style="font-size:12px">リンクを生成してコピー</button>
+    <div id="syncLinkOut" style="font-size:11px;margin-top:8px;word-break:break-all;color:var(--muted)"></div>
     <div id="syncModalMsg" style="font-size:13px;margin-top:12px;min-height:20px"></div>
   </div>
 </div>
