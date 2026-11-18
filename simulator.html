@@ -310,7 +310,7 @@
         <tbody id="mockBody"></tbody>
       </table>
     </div>
-    <p class="small muted" style="margin-top:8px">「換算総合得点（本番予想）」＝ 現在の調査書点 ＋ 模試5科合計 × <b>Vもぎ補正係数</b> × 1.4。補正係数は実施月で自動切替：<b>5〜11月 → ×1.2 ／ 12〜3月 → ×1.1</b>（VもぎはW模擬より難易度が高いため、本番得点を上方補正）。内申を変更すると全模試の換算値も更新されます。</p>
+    <p class="small muted" style="margin-top:8px">「換算総合得点（本番予想）」＝ 現在の調査書点 ＋ <b>本番予測5科点</b> × 1.4。<b>5科偏差値入力時</b>：偏差値から統計的に換算（都立R6–R8実績 5科平均≈320点・SD≈75点 を基に正規分布変換）。<b>偏差値未入力時</b>：従来の生スコア×Vもぎ係数（5〜11月→×1.2、12〜3月→×1.1）で代替。内申を変更すると全模試の換算値も更新されます。</p>
   </section>
 
   <!-- グラフ -->
@@ -335,7 +335,7 @@
         <li><b>ESAT-J（英語スピーキングテスト）は20点満点</b>で加点され、総合は1020点満点になります（ご指定どおり、既定では計算に含めていません）。</li>
         <li><b>内蔵の学校データ</b>は外部サイトの一覧表を転記したものです（偏差値・合格基準点＝A1-Networksのめやす表、換算内申のめやす＝高校受験ナビ 2027年春入試用）。模試や年度で数値は動くため、志望校決定の場面では必ず最新の模試資料で確認し、必要なら手入力で上書きしてください。</li>
         <li>Vもぎの合格基準点は「合格可能性60%の位置」を示すもので、合格最低点や合格者平均点ではありません。判定（S〜E）は目安としてご利用ください。</li>
-        <li><b>Vもぎ→本番の難易度補正（換算総合得点への反映）：</b>VもぎはW模擬と比べて難易度が高く、本番の都立入試の得点と乖離があるため、実施月ごとに補正係数を掛けて本番予想得点に換算しています。<b>5〜11月実施分：Vもぎ5科合計×1.2</b>が本番予想5科得点の目安、<b>12〜3月実施分：×1.1</b>（入試直前期は難易度差が縮まる傾向）。この係数は塾講師の実績データ・生徒の模試結果と都立入試本番の得点比較から導出されたものです。換算総合得点＝調査書点＋（5科合計×補正係数×1.4）で算出し、グラフにも反映しています。</li>
+        <li><b>Vもぎ→本番の換算（換算総合得点への反映）：</b>5科偏差値が入力されている模試は<b>統計的正規分布変換</b>で本番予測点を算出します（都立入試 R6–R8 5科合計実績データ：平均≈320点・SD≈75点 を基に「予測5科点＝(偏差値−50)÷10×75＋320」で換算）。5科偏差値が未入力の場合は従来の生スコア×係数（5〜11月：×1.2／12〜3月：×1.1）でフォールバック。偏差値ベースの換算は生スコアの試験難易度差に左右されず、相対的な実力をより正確に反映します。換算総合得点＝調査書点＋（本番予測5科点×1.4）で算出しています。</li>
       </ul>
       <div class="notes">
         <b>主な参考情報</b>
@@ -432,12 +432,33 @@ function calcToujitsu(scores, incline){
   };
 }
 
-/* Vもぎ補正倍率（実施月から本番難易度係数を返す）
+/* Vもぎ補正倍率（フォールバック用：5科偏差値未入力時に使用）
    5〜11月のVもぎ：×1.2 ／ 12〜3月のVもぎ：×1.1 */
 function vmogiFactor(dateStr){
   if (!dateStr) return 1.2;
   var m = parseInt(String(dateStr).slice(5, 7), 10);
   return (m >= 1 && m <= 3 || m === 12) ? 1.1 : 1.2;
+}
+
+/* 偏差値から本番5科予測点を返す（統計的換算）
+   都立入試 5科統計 R6-R8実績：平均 ≈ 320点, SD ≈ 75点（500点満点）
+   z = (dev5 - 50) / 10 → 予測点 = z × SD + 平均 */
+function devToActualScore(dev5){
+  var MEAN = 320, SD = 75;
+  var score = (Number(dev5) - 50) / 10 * SD + MEAN;
+  return Math.min(500, Math.max(0, score));
+}
+
+/* 換算総合得点を計算（偏差値優先・生スコアフォールバック） */
+function calcKansan(shinsho, m){
+  if (m.dev5 !== '' && m.dev5 != null && m.dev5 !== undefined){
+    return shinsho + devToActualScore(m.dev5) * 1.4;
+  }
+  var sum = 0, any = false;
+  MAIN_SUBJECTS.forEach(function(k){
+    if (m.scores[k] !== '' && m.scores[k] != null){ sum += Number(m.scores[k]); any = true; }
+  });
+  return any ? shinsho + sum * vmogiFactor(m.date) * 1.4 : null;
 }
 
 /* 総合得点（1000点満点／ESAT-J使用時は1020点満点） */
@@ -1102,8 +1123,8 @@ function refresh(){
     MAIN_SUBJECTS.forEach(function(k){ if (m.scores[k] !== '' && m.scores[k] != null){ sum += Number(m.scores[k]); any = true; } });
     var el1 = $('mockSum' + m.id), el2 = $('mockConv' + m.id);
     if (el1) el1.textContent = any ? sum : '—';
-    var factor = vmogiFactor(m.date);
-    if (el2) el2.textContent = any ? fmt(nai.shinsho + sum * factor * 1.4) : '—';
+    var kansan = calcKansan(nai.shinsho, m);
+    if (el2) el2.textContent = kansan != null ? fmt(kansan) : '—';
   });
 
   // 志望校判定
@@ -1336,9 +1357,7 @@ function renderCharts(){
   });
   var convSeries = [{ label:'換算総合得点（本番予想）', color:'#4f6df5',
     values: sorted.map(function(m){
-      var sum = 0, any = false;
-      MAIN_SUBJECTS.forEach(function(k){ if (m.scores[k] !== '' && m.scores[k] != null){ sum += Number(m.scores[k]); any = true; } });
-      return any ? nai.shinsho + sum * vmogiFactor(m.date) * 1.4 : null;
+      return calcKansan(nai.shinsho, m);
     }) }];
   var refs = s.schools.filter(function(sc){ return sc.kijun !== '' && sc.kijun != null; }).map(function(sc, i){
     return { label: sc.name || ('志望校' + (i + 1)), value: Number(sc.kijun), color: ['#0e9f6e','#d9a300','#e05c8a'][i] || '#b9c0d6' };
