@@ -214,6 +214,11 @@ td.c-ph.ph-ok{background:#E0F5EC!important;}
 .size-btn:hover{border-color:var(--accent);color:var(--accent);}
 .size-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 .cat-btn.active{background:#5B4FCF;border-color:#5B4FCF;color:#fff;}
+/* 経由ボタン選択時の色 */
+.seltype-btn[data-keiro="スカウト"].active{background:#FFF3E0;border-color:#E07020;color:#A05010;}
+.seltype-btn[data-keiro="メンター"].active{background:#E8F0FD;border-color:#2050B0;color:#2050B0;}
+.seltype-btn[data-keiro="マイページ"].active{background:#E8F5E9;border-color:#2E7D32;color:#2E7D32;}
+.seltype-btn[data-keiro=""].active{background:#E0E4EC;border-color:#8899AA;color:#44556A;}
 
 /* url link */
 .url-link{font-size:12px;color:var(--accent);text-decoration:none;display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -770,7 +775,7 @@ document.getElementById('tbody').addEventListener('click',e=>{
   const td=e.target.closest('td'); if(!td) return;
   if(td.classList.contains('c-exp')||td.classList.contains('c-name')){ closeInlinePopup(); openDrawer(id); }
   else if(td.classList.contains('c-mp')){ const r=db.find(x=>x.id===id); if(!r) return; r.mypage=!r.mypage; const c=td.querySelector('.chk'); if(c){c.classList.toggle('on',r.mypage);c.textContent=r.mypage?'✓':'';} saveDB(); }
-  else if(td.classList.contains('c-status')){ closeInlinePopup(); openDrawer(id); }
+  else if(td.classList.contains('c-status')){ showInlinePopup(id,'status',td); }
   else if(td.classList.contains('c-result')) showInlinePopup(id,'result',td);
   else if(td.classList.contains('c-esdate')) showInlinePopup(id,'esdate',td);
   else if(td.classList.contains('c-dl'))     showInlinePopup(id,'dl',td);
