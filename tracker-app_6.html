@@ -279,6 +279,8 @@ td.c-ph.ph-ok{background:#E0F5EC!important;}
         <th class="c-ph">1次</th>
         <th class="c-ph">2次</th>
         <th class="c-ph">3次</th>
+        <th class="c-ph">4次</th>
+        <th class="c-ph">5次</th>
         <th class="c-occ">職種</th>
         <th class="c-memo">メモ</th>
       </tr></thead>
@@ -632,6 +634,8 @@ function renderTable(){
       <td class="c-ph${r.phases[0]?.passed?' ph-ok':''}" data-ph="0">${tags(r.phases[0])}</td>
       <td class="c-ph${r.phases[1]?.passed?' ph-ok':''}" data-ph="1">${tags(r.phases[1])}</td>
       <td class="c-ph${r.phases[2]?.passed?' ph-ok':''}" data-ph="2">${tags(r.phases[2])}</td>
+      <td class="c-ph${r.phases[3]?.passed?' ph-ok':''}" data-ph="3">${tags(r.phases[3])}</td>
+      <td class="c-ph${r.phases[4]?.passed?' ph-ok':''}" data-ph="4">${tags(r.phases[4])}</td>
       <td class="c-occ">${esc(r.occ||'—')}</td>
       <td class="c-memo memo-cell">${esc((r.memo||'').slice(0,55))}${(r.memo||'').length>55?'…':''}</td>
     </tr>
